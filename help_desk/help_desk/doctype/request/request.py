@@ -35,10 +35,11 @@ from datetime import datetime, timedelta
 class Request(Document):
 	def autoname(self):
 		if self.request_status == "Open":
-			self.name = make_autoname(self.department_abbriviation.upper()+ ' - ' +'.#####')
+			self.support_id = make_autoname(self.department_abbriviation+ ' - ' +'.#####')
+			self.name = self.support_id
 
 	def validate(self):	
-		self.validate_status()
+		pass
 
 	def on_update(self):
 		self.build_notification()
@@ -234,10 +235,7 @@ def make_new_request(source_name, target_doc=None):
 		target.request_status = "Open"
 	doclist = get_mapped_doc("Request",source_name,{
 		"Request": {
-		"doctype": "Request",
-		#  "field_map":{
-		#  "on_the_behalf_of":"on_the_behalf_of"
-		# }
+		"doctype": "Request"
 		}
 		}, target_doc, refresh_values)
 	return doclist

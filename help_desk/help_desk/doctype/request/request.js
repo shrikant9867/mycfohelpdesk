@@ -26,16 +26,6 @@ frappe.ui.form.on("Request","onload" ,function(frm){
 	}
 })
 
-/*frappe.ui.form.on("Request","onload" ,function(frm){
-	cur_frm.fields_dict.approver.get_query = function(doc) {
-		return{
-			filters: {
-				'operational_and_project_details' : role
-			}
-		}
-	}
-})	*/
-
 
 frappe.ui.form.on("Request","on_the_behalf_of",function(frm){
 	if(cur_frm.doc.on_the_behalf_of == "Self"){
@@ -45,7 +35,7 @@ frappe.ui.form.on("Request","on_the_behalf_of",function(frm){
 			callback: function(r) {
 				cur_frm.doc.requester_name = r.message.first_name
 				cur_frm.doc.requester_email_id = r.message.email
-				cur_frm.doc.requester_contact_number = r.message.requester_contact_number
+				frm.add_fetch('employee', 'cell_number', 'requester_contact_number');
 				cur_frm.refresh_fields()
 			} 
 		})
