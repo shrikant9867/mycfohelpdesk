@@ -6,10 +6,11 @@ from __future__ import unicode_literals
 import frappe
 import itertools
 import json
-from frappe.utils import get_link_to_form,get_url_to_form,comma_or,get_fullname,nowdate, getdate
+from frappe.utils import get_link_to_form,get_url_to_form,comma_or,get_fullname,nowdate, getdate,cstr
 from frappe.model.naming import make_autoname
 from frappe import throw, _
 from frappe.model.document import Document
+from frappe.model.mapper import get_mapped_doc
 from frappe import msgprint
 from frappe.utils import now_datetime
 from datetime import datetime, timedelta
@@ -35,18 +36,18 @@ import frappe.share
 class Request(Document):
 	def autoname(self):
 		if self.request_status == "Open":
-			self.name = make_autoname(self.department_abbriviation.upper()+ ' - ' +'.#####')   	
-			self.support_id = self.name
+			if not self.support_id:
+				self.support_id = make_autoname(self.department_abbriviation.upper()+ ' - ' +'.#####') 
+				self.name = self.support_id
+			elif self.support_id:
+				self.name = self.support_id
 
 	def validate(self):	
 		pass
 
 	def on_update(self):
 		self.build_notification()
-		#self.add_comments_for_additional_activities()
-		# self.show_and_hide()
 
-	
 	def build_notification(self):
 		"""
 			Decide whom to notify
@@ -71,14 +72,15 @@ class Request(Document):
 				send mail to approver and requestor
 				["approver@gmail.com","requestor@gmail.com"]
 			"""
-			approver = frappe.get_doc("User",self.approver)
-			self.notify_user([approver.email,self.requester_email_id],"Request Created","Request has been created")
+			# approver = frappe.get_doc("User",self.approver)
+			approver = frappe.get_doc("Employee",self.approver)
+			self.notify_user([approver.user_id,self.requester_email_id],"Request Created","Request has been created")
 			self.allocated_to = "Approver"
 			frappe.db.set_value("Request",self.name,"allocated_to","Approver")
 			self.share_document(approver.name)
 			comment = """Created Request and assigned to Approver:{approver}""".format(approver=approver.name)
 			self.add_comment("Created",comment)	
-		
+
 		elif self.approval_required == 'No':
 			"""
 				send mail to executor
@@ -212,7 +214,6 @@ class Request(Document):
 		elif self.allocated_to == 'Ad Approver':
 			self.perform_additional_approver_operations()
 			
-
 @frappe.whitelist()
 def get_user_details():
 	return frappe.get_doc("User",frappe.session.user)
@@ -245,6 +246,7 @@ def get_executer_list(doc):
 		where t1.name = t2.parent and t2.role = '{0}'""".format(sreq.executer),as_list =1)
  	chain = itertools.chain(*user_list)
  	return list(chain)
+	
 
 @frappe.whitelist()	
 def check_for(check_for,doc):
@@ -261,10 +263,66 @@ def check_for(check_for,doc):
 	if check_for == 'Additional Approver' and current_doc.get('additional_approver') != current_user:
 		return "Not Allowed only additional_approver can edit these fields"
 	 
-# @frappe.whitelist()
-# def make_amend_request(source_name, target_doc,ignore_permissions=False):
-# 	doclist = get_mapped_doc("Request",source_name,{
-# 		"Request":
-# 		})
 
-			
+def get_approver_list(doctype, txt, searchfield, start, page_len, filters):
+	
+	op_and_project = frappe.db.sql("""select name from `tabOperation And Project Commercial`
+		where project_commercial = %s""",(filters.get("project_id")),as_list =1,debug =True)
+	
+	new_op_and_project = [op[0] for op in op_and_project if op]
+	new = ','.join('"{0}"'.format(w) for w in new_op_and_project)
+	approver = frappe.db.sql("""select name from `tabEmployee` where name in
+					( select Distinct user_name from `tabOperation And Project Details`t1
+					where t1.parent in ({0}) and t1.role = "EL" or t1.role = "EM" ) """.format(new),as_list=1,debug =True)
+	
+	return approver
+
+@frappe.whitelist()
+def make_new_request(source_name, target_doc=None):
+	
+	support_id = generate_support_id(source_name)
+
+	def refresh_values(source, target):
+		target.subject = ""
+		target.department_abbriviation = ""
+		target.sub_request_category = ""
+		target.approval_required = ""
+		target.issue_description = ""
+		target.p_id = ""
+		target.approver = ""
+		target.request_status = "Open"
+		target.support_id = support_id
+		target.allocated_to = ""
+		target.additional_approver_status = ""
+		target.more_info_required = ""
+		target.approver_status = ""
+		target.approver_comments = ""
+		target.more_information = ""
+		target.reason_for_rejection = ""
+		target.priority = ""
+		target.due_date = ""
+		target.request_category = ""
+		target.executor_status = ""
+		target.more_information_required = ""
+		target.additional_approval_required = ""
+		target.additional_approver = ""
+		target.additional_approver_status = ""
+		target.additional_approver_comments = ""
+		target.more_info = ""
+		target.reason_of_rejection = ""
+	
+	doclist = get_mapped_doc("Request",source_name,{
+		"Request": {
+		"doctype": "Request",
+		 # "field_map":{
+		 # 		"support_id":support_id
+			# }
+		}
+		}, target_doc, refresh_values)
+	return doclist
+
+def generate_support_id(source_name):
+	count = frappe.get_value("Request",source_name,"incre") + 1
+	support_id = source_name +'-'+cstr(count)
+	frappe.db.set_value("Request",source_name,"incre",count)
+	return support_id

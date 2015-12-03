@@ -16,6 +16,27 @@ frappe.ui.form.on("Request","onload" ,function(frm){
 	}
 })
 
+frappe.ui.form.on("Request","onload" ,function(frm){
+	cur_frm.fields_dict.p_id.get_query = function(doc) {
+		return {
+			filters: {
+				'project_status': "Active" 
+			}
+		}
+	}
+})
+
+/*frappe.ui.form.on("Request","onload" ,function(frm){
+	cur_frm.fields_dict.approver.get_query = function(doc) {
+		return{
+			filters: {
+				'operational_and_project_details' : role
+			}
+		}
+	}
+})	*/
+
+
 frappe.ui.form.on("Request","on_the_behalf_of",function(frm){
 	if(cur_frm.doc.on_the_behalf_of == "Self"){
 		console.log("self")
@@ -56,6 +77,31 @@ frappe.ui.form.on("Request","priority",function(frm){
 	}
 });
 
+/*frappe.ui.form.on("Request","approver",function(frm){
+	if(cur_frm.doc.approver){
+		console.log("approver1")
+		return frappe.call({
+			method: "help_desk.help_desk.doctype.request.request.get_approver_list",
+			args: {
+				"doc":cur_frm.doc
+			},
+			callback: function(r){
+				console.log(r.message)
+				cur_frm.doc.approver = r.message
+			} 
+		})
+	}
+});*/
+
+cur_frm.fields_dict['approver'].get_query = function(doc, cdt, cdn) {
+	console.log(doc.p_id)
+	return {
+		query: "help_desk.help_desk.doctype.request.request.get_approver_list",
+		filters: {
+			'project_id': doc.p_id
+		}
+	}
+}
 
 
 
@@ -78,9 +124,7 @@ cur_frm.cscript.refresh = function(doc, cdt, cdn) {
     	cur_frm.set_df_property("more_info","read_only",1)
     	cur_frm.set_df_property("reason_of_rejection","read_only",1)
     }
-    /*if(doc.executor_status == "Resolved"){
-    	cur_frm.set_df_property("executor_status","read_only",1)
-    }*/
+   
     if(doc.priority){
     	cur_frm.set_df_property("priority","read_only",1)
     	cur_frm.set_df_property("due_date","read_only",1)
@@ -96,8 +140,7 @@ cur_frm.cscript.refresh = function(doc, cdt, cdn) {
     }
     if(doc.docstatus == 0){
     	if(doc.request_status == "Close"){
-       		cur_frm.add_custom_button(__("Amend"),
-       			cur_frm.cscript['Amend']);
+       		cur_frm.add_custom_button(__("Re Open"),new_request)
  		}
 	}
     refresh_field("allocated_to")
@@ -176,8 +219,10 @@ validate_field = function(doc,check_for,frm){
 	})
 }
 
-	/*cur_frm.cscript['Amend'] = function() {
-		frappe.model.open_mapped_doc({
-			method: "help_desk.help_desk.doctype.request.make_amend_request",
-		})
-	}*/
+new_request = function() {
+	console.log("new_request")
+	frappe.model.open_mapped_doc({
+		method: "help_desk.help_desk.doctype.request.request.make_new_request",
+		frm: cur_frm
+	})
+}
