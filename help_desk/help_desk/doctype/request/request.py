@@ -10,6 +10,7 @@ from frappe.utils import get_link_to_form,get_url_to_form,comma_or,get_fullname,
 from frappe.model.naming import make_autoname
 from frappe import throw, _
 from frappe.model.document import Document
+from frappe.model.mapper import get_mapped_doc
 from frappe import msgprint
 from frappe.utils import now_datetime
 from datetime import datetime, timedelta
@@ -34,25 +35,13 @@ from datetime import datetime, timedelta
 class Request(Document):
 	def autoname(self):
 		if self.request_status == "Open":
-			self.name = make_autoname(self.department_abbriviation.upper()+ ' - ' +'.#####')   	
-			self.support_id = self.name
+			self.name = make_autoname(self.department_abbriviation.upper()+ ' - ' +'.#####')
 
 	def validate(self):	
-		# self.validate_due_date()
-		# self.validate_holiday()
-		# self.validate_current_user()
-		pass
+		self.validate_status()
+
 	def on_update(self):
 		self.build_notification()
-		# self.show_and_hide()
-
-	# def show_and_hide(self):	
-	# 	"""
-	# 	approver details show when approver log in
-	# 	"""
-	# 	if self.allocated_to == '' or self.allocated_to == 'Approver' or self.allocated_to == 'Executor' 
-	# 	or self.allocated_to == 'Ad Approver':
-	# 		self.current_user()
 
 	def build_notification(self):
 		"""
@@ -78,11 +67,11 @@ class Request(Document):
 				send mail to approver and requestor
 				["approver@gmail.com","requestor@gmail.com"]
 			"""
-			approver = frappe.get_doc("User",self.approver)
-			self.notify_user([approver.email,self.requester_email_id],"Request Created","Request has been created")
+			# approver = frappe.get_doc("User",self.approver)
+			approver = frappe.get_doc("Employee",self.approver)
+			self.notify_user([approver.user_id,self.requester_email_id],"Request Created","Request has been created")
 			self.allocated_to = "Approver"
 			frappe.db.set_value("Request",self.name,"allocated_to","Approver")
-		
 		elif self.approval_required == 'No':
 			"""
 				send mail to executor
@@ -153,26 +142,22 @@ class Request(Document):
 	 	chain = itertools.chain(*user_list)
 	 	return list(chain)	
 
-	# def show_and_hide(self):
-	# 	if self.requester_email_id == frappe.session.user:
-	# 		self.current_user = "Requester"
-	# 		frappe.db.set_value("Request",self.name,"current_user","Requester")
-	# 	elif self.approver == frappe.session.user:
-	# 		self.current_user = "Approver"
-	# 		frappe.db.set_value("Request",self.name,"current_user","Approver")	
-	# 	elif frappe.session.user in executor:
-	# 		executor = self.get_executer_list()
-	# 		self.current_user = "Executor"
-	# 		frappe.db.set_value("Request",self.name,"current_user","Executor")
-	# 	elif self.additional_approver == frappe.session.user:
-	# 		self.current_user = "Ad Approver"
-	# 		frappe.db.set_value("Request",self.name,"current_user","Ad Approver")
-	
 	def assign(self):
 		"""
 			-check whether there is to assigned for these doc if yes change the name of owne	
 		"""
-
+	def validate_approver_list(self):
+		# operational_id = frappe.db.sql("""select operational_id from `tabOperation And Project Commercial`t1,
+		# 			`tabProject Commercial`t2 where t1.project_commercial = t2.p_id;""",as_list =1)
+		# new_operational_id = [op[0] for op in operational_id if op] 	
+		# new = ','.join('"{0}"'.format(w) for w in new_operational_id)
+		# approver = frappe.db.sql("""select name from `tabEmployee` where name in
+		# 				(select user_name from `tabOperation Details`t1
+		# 				where t1.parent = %s and t1.role = "EL" or t1.role = "EM")""",(new),as_list=1)
+		# print new
+		# print approver
+		self.name = self.support_id
+		print self.support_id
 @frappe.whitelist()
 def get_user_details():
 	return frappe.get_doc("User",frappe.session.user)
@@ -205,6 +190,7 @@ def get_executer_list(doc):
 		where t1.name = t2.parent and t2.role = '{0}'""".format(sreq.executer),as_list =1)
  	chain = itertools.chain(*user_list)
  	return list(chain)
+	
 
 @frappe.whitelist()	
 def check_for(check_for,doc):
@@ -222,10 +208,36 @@ def check_for(check_for,doc):
 	if check_for == 'Additional Approver' and current_doc.get('additional_approver') != current_user:
 		return "Not Allowed only additional_approver can edit these fields"
 	 
-# @frappe.whitelist()
-# def make_amend_request(source_name, target_doc,ignore_permissions=False):
-# 	doclist = get_mapped_doc("Request",source_name,{
-# 		"Request":
-# 		})
+@frappe.whitelist()
+def get_approver_list(doc):
+	project_doc = json.loads(doc)
+	op_and_project = frappe.db.sql("""select name from `tabOperation And Project Commercial`
+		where project_commercial = %s""",(project_doc.get("p_id")),as_list =1,debug =True)
+	new_op_and_project = [op[0] for op in op_and_project if op]
+	new = ','.join('"{0}"'.format(w) for w in new_op_and_project)
+	approver = frappe.db.sql("""select name from `tabEmployee` where name in
+					(select user_name from `tabOperation And Project Details`t1
+					where t1.parent = %s and t1.role = "EL" or t1.role = "EM")""",(new),as_list=1,debug =True)
+	return approver
 
-			
+@frappe.whitelist()
+def make_new_request(source_name, target_doc=None):
+	
+	def refresh_values(source, target):
+		target.subject = ""
+		target.department_abbriviation = ""
+		target.sub_request_category = ""
+		target.approval_required = ""
+		target.issue_description = ""
+		target.p_id = ""
+		target.approver = ""
+		target.request_status = "Open"
+	doclist = get_mapped_doc("Request",source_name,{
+		"Request": {
+		"doctype": "Request",
+		#  "field_map":{
+		#  "on_the_behalf_of":"on_the_behalf_of"
+		# }
+		}
+		}, target_doc, refresh_values)
+	return doclist
