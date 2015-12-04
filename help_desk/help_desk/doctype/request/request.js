@@ -35,7 +35,7 @@ frappe.ui.form.on("Request","on_the_behalf_of",function(frm){
 			callback: function(r) {
 				cur_frm.doc.requester_name = r.message.first_name
 				cur_frm.doc.requester_email_id = r.message.email
-				frm.add_fetch('employee', 'cell_number', 'requester_contact_number');
+				/*frm.add_fetch('employee', 'cell_number', 'requester_contact_number');*/
 				cur_frm.refresh_fields()
 			} 
 		})
@@ -84,27 +84,21 @@ frappe.ui.form.on("Request","priority",function(frm){
 });*/
 
 
-
 cur_frm.cscript.refresh = function(doc, cdt, cdn) {
 	if(doc.on_the_behalf_of){
 		cur_frm.set_df_property("employee", "hidden",1);
 		cur_frm.set_df_property("on_the_behalf_of", "hidden",1);	
     }
-    if(doc.approver_status == "Approved" || doc.approver_status == "Rejected" ||
-    	doc.approver_status == "More Info Required"){
+    if(doc.approver_status == "Approved" || doc.approver_status == "Rejected"){
     	cur_frm.set_df_property("approver_status","read_only",1)
     	cur_frm.set_df_property("approver_comments","read_only",1)
-    	cur_frm.set_df_property("more_information","read_only",1)
     	cur_frm.set_df_property("reason_for_rejection","read_only",1)
     }
-    if(doc.additional_approver_status == "Approved" || doc.additional_approver_status == "Rejected" ||
-	     doc.additional_approver_status == "More Info Required"){
+    if(doc.additional_approver_status == "Approved" || doc.additional_approver_status == "Rejected"){
     	cur_frm.set_df_property("additional_approver_status","read_only",1)
     	cur_frm.set_df_property("additional_approver_comments","read_only",1)
-    	cur_frm.set_df_property("more_info","read_only",1)
     	cur_frm.set_df_property("reason_of_rejection","read_only",1)
     }
-   
     if(doc.priority){
     	cur_frm.set_df_property("priority","read_only",1)
     	cur_frm.set_df_property("due_date","read_only",1)

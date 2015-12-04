@@ -68,11 +68,11 @@ class Request(Document):
 				send mail to approver and requestor
 				["approver@gmail.com","requestor@gmail.com"]
 			"""
-			# approver = frappe.get_doc("User",self.approver)
-			approver = frappe.get_doc("Employee",self.approver)
-			self.notify_user([approver.user_id,self.requester_email_id],"Request Created","Request has been created")
+			approver = frappe.get_doc("User",self.approver)
+			self.notify_user([approver.email,self.requester_email_id],"Request Created","Request has been created")
 			self.allocated_to = "Approver"
 			frappe.db.set_value("Request",self.name,"allocated_to","Approver")
+
 		elif self.approval_required == 'No':
 			"""
 				send mail to executor
@@ -80,7 +80,7 @@ class Request(Document):
 			"""
 			executor = self.get_executer_list()
 			executor.append(self.requester_email_id)
-			self.notify_user(executor,"Request Created","Request have only executer")	
+			self.notify_user(executor,"Request Created","Request have only executer")
 			self.allocated_to = "Executor"
 			frappe.db.set_value("Request",self.name,"allocated_to","Executor")
 
@@ -135,6 +135,7 @@ class Request(Document):
 			send mail notification
 		"""	
 		frappe.sendmail(receiver, subject=subj, message =msg)
+
 
 	def get_executer_list(self):
 		sreq = frappe.get_doc("Sub Request Category",self.sub_request_category)
