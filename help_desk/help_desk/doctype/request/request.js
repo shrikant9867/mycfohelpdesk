@@ -83,6 +83,15 @@ frappe.ui.form.on("Request","priority",function(frm){
 	}
 });*/
 
+cur_frm.fields_dict['approver'].get_query = function(doc, cdt, cdn) {
+	return {
+		query: "help_desk.help_desk.doctype.request.request.get_approver_list",
+		filters: {
+			'project_id': doc.p_id
+		}
+	}
+}
+
 
 cur_frm.cscript.refresh = function(doc, cdt, cdn) {
 	if(doc.on_the_behalf_of){
@@ -114,7 +123,7 @@ cur_frm.cscript.refresh = function(doc, cdt, cdn) {
     }
     if(doc.docstatus == 0){
     	if(doc.request_status == "Close"){
-       		cur_frm.add_custom_button(__("Amend"),new_request)
+       		cur_frm.add_custom_button(__("Re Open"),new_request)
  		}
 	}
     refresh_field("allocated_to")
@@ -122,6 +131,9 @@ cur_frm.cscript.refresh = function(doc, cdt, cdn) {
 
 frappe.ui.form.on("Request",{
 	more_info_required:function(frm){
+		this.validate_field(frm.doc,"Requester",frm)
+	},
+	request_status:function(frm){
 		this.validate_field(frm.doc,"Requester",frm)
 	},
 	approver_status:function(frm){
