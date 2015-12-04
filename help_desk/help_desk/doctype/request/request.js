@@ -94,7 +94,6 @@ frappe.ui.form.on("Request","priority",function(frm){
 });*/
 
 cur_frm.fields_dict['approver'].get_query = function(doc, cdt, cdn) {
-	console.log(doc.p_id)
 	return {
 		query: "help_desk.help_desk.doctype.request.request.get_approver_list",
 		filters: {
@@ -148,6 +147,9 @@ cur_frm.cscript.refresh = function(doc, cdt, cdn) {
 
 frappe.ui.form.on("Request",{
 	more_info_required:function(frm){
+		this.validate_field(frm.doc,"Requester",frm)
+	},
+	request_status:function(frm){
 		this.validate_field(frm.doc,"Requester",frm)
 	},
 	approver_status:function(frm){

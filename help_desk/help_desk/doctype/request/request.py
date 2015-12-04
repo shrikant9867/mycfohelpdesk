@@ -77,7 +77,8 @@ class Request(Document):
 			self.notify_user([approver.user_id,self.requester_email_id],"Request Created","Request has been created")
 			self.allocated_to = "Approver"
 			frappe.db.set_value("Request",self.name,"allocated_to","Approver")
-			self.share_document(approver.name)
+			self.share_document(approver.user_id)
+			self.share_document(self.requester_email_id)
 			comment = """Created Request and assigned to Approver:{approver}""".format(approver=approver.name)
 			self.add_comment("Created",comment)	
 
@@ -108,6 +109,9 @@ class Request(Document):
 			self.notify_user(executor,"Request Approved","Request Approved by Approver")
 			self.allocated_to = "Executor"
 			frappe.db.set_value("Request",self.name,"allocated_to","Executor")
+			for email in self.get_executer_names():
+				self.share_document(email)
+			self.share_document(self.requester_email_id)
 			sreq = frappe.get_doc("Sub Request Category",self.sub_request_category)
 			comment = """approved the Request and assigned to Executor:{role}""".format(role=sreq.executer)
 			self.add_comment("Approved",comment)
@@ -220,23 +224,17 @@ def get_user_details():
 
 
 def get_holiday(due_date):
-	# print nowdate()
-	# print getdate()
 	tot_hol = frappe.db.sql("""select count(*) from `tabHoliday List` h1,`tabHoliday` h2 
-	where h2.parent = h1.name and h1.name = 'Mycfo' and h2.holiday_date >= %s and  h2.holiday_date <= %s""",(nowdate(),due_date.strftime("%Y-%m-%d")),debug =True)
-	# print tot_hol[0][0]
+	where h2.parent = h1.name and h1.name = 'Mycfo' and h2.holiday_date >= %s and  h2.holiday_date <= %s""",(nowdate(),due_date.strftime("%Y-%m-%d")))
 	return tot_hol[0][0]
 
 @frappe.whitelist()
 def get_due_date(doc):
 	doc = json.loads(doc)
 	tat = frappe.db.get_value("TAT", {"priority":doc.get('priority')}, "tat")
-	# print d.strftime("%Y-%m-%d")
 	due_date = datetime.now() + timedelta(hours=tat)
 	holiday	= get_holiday(due_date)
 	tat_with_holiday = holiday*24 + tat - 24
-	print tat_with_holiday
-	# print e.strftime("%Y-%m-%d")
 	due_date_with_holiday = datetime.now() + timedelta(hours=tat_with_holiday)
 	return due_date_with_holiday.strftime("%D")
 
@@ -251,12 +249,12 @@ def get_executer_list(doc):
 @frappe.whitelist()	
 def check_for(check_for,doc):
 	current_doc = json.loads(doc)
-	print current_doc
 	current_user = frappe.session.user
-	# print current_user
+	if check_for == 'Approver' and current_doc.get('approver'):
+		emp_user = frappe.db.get_value("Employee",current_doc.get('approver'),"user_id")
 	if check_for == 'Requester' and current_doc.get('requester_email_id') != current_user:
 		return "Not Allowed only Requester can Edit this field"
-	if check_for == 'Approver' and current_doc.get('approver') != current_user:
+	if check_for == 'Approver' and emp_user != current_user:
 		return "Not Allowed only approver can edit these fields" 
 	if check_for == 'Executor' and current_user not in get_executer_list(current_doc):
 		return "Not Allowed only executor can edit these fields"
@@ -267,13 +265,13 @@ def check_for(check_for,doc):
 def get_approver_list(doctype, txt, searchfield, start, page_len, filters):
 	
 	op_and_project = frappe.db.sql("""select name from `tabOperation And Project Commercial`
-		where project_commercial = %s""",(filters.get("project_id")),as_list =1,debug =True)
+		where project_commercial = %s""",(filters.get("project_id")),as_list =1)
 	
 	new_op_and_project = [op[0] for op in op_and_project if op]
 	new = ','.join('"{0}"'.format(w) for w in new_op_and_project)
 	approver = frappe.db.sql("""select name from `tabEmployee` where name in
 					( select Distinct user_name from `tabOperation And Project Details`t1
-					where t1.parent in ({0}) and t1.role = "EL" or t1.role = "EM" ) """.format(new),as_list=1,debug =True)
+					where t1.parent in ({0}) and t1.role = "EL" or t1.role = "EM" ) """.format(new),as_list=1)
 	
 	return approver
 
@@ -313,9 +311,9 @@ def make_new_request(source_name, target_doc=None):
 	
 	doclist = get_mapped_doc("Request",source_name,{
 		"Request": {
-		"doctype": "Request",
-		 # "field_map":{
-		 # 		"support_id":support_id
+			"doctype": "Request",
+		 	# "field_map":{
+		 	# 		"support_id":support_id
 			# }
 		}
 		}, target_doc, refresh_values)
