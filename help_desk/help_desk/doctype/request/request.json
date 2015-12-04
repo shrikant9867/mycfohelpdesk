@@ -957,11 +957,7 @@
  "is_submittable": 0, 
  "issingle": 0, 
  "istable": 0, 
-<<<<<<< HEAD
- "modified": "2015-12-04 12:50:04.169066", 
-=======
  "modified": "2015-12-04 10:28:40.597805", 
->>>>>>> c1eac06d3c8da40a2c28630bc2f38bb1b7177834
  "modified_by": "Administrator", 
  "module": "Help Desk", 
  "name": "Request", 
