@@ -5,6 +5,17 @@ from frappe import _
 def get_data(): 
 	return [
 		{
+			"label": _("Documents"),
+			"icon": "icon-star",
+			"items": [
+				{
+					"type": "doctype",
+					"name": "Request",
+					"description": _("List Of Requests"),
+				},
+			]
+		},
+		{
 			"label": _("Masters"),
 			"icon": "icon-star",
 			"items": [
@@ -27,17 +38,6 @@ def get_data():
 					"type": "doctype",
 					"name": "Sub Request Category",
 					"description": _("Sub Request"),
-				},
-			]
-		},
-		{
-			"label": _("Documents"),
-			"icon": "icon-star",
-			"items": [
-				{
-					"type": "doctype",
-					"name": "Request",
-					"description": _("List Of Requests"),
 				},
 			]
 		}

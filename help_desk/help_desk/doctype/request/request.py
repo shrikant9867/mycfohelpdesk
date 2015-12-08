@@ -47,6 +47,7 @@ class Request(Document):
 
 	def on_update(self):
 		self.build_notification()
+		self.set_due_date()
 
 	def build_notification(self):
 		"""
@@ -72,7 +73,6 @@ class Request(Document):
 				send mail to approver and requestor
 				["approver@gmail.com","requestor@gmail.com"]
 			"""
-			# approver = frappe.get_doc("User",self.approver)
 			approver = frappe.get_doc("Employee",self.approver)
 			self.notify_user([approver.user_id,self.requester_email_id],"Request Created","Request has been created")
 			self.allocated_to = "Approver"
@@ -82,6 +82,7 @@ class Request(Document):
 			comment = """Created Request and assigned to Approver:{approver}""".format(approver=approver.name)
 			self.add_comment("Created",comment)	
 
+
 		elif self.approval_required == 'No':
 			"""
 				send mail to executor
@@ -89,7 +90,7 @@ class Request(Document):
 			"""
 			executor = self.get_executer_list()
 			executor.append(self.requester_email_id)
-			self.notify_user(executor,"Request Created","Request have only executer")	
+			self.notify_user(executor,"Request Created","Request have only executer")
 			self.allocated_to = "Executor"
 			frappe.db.set_value("Request",self.name,"allocated_to","Executor")
 			for email in self.get_executer_names():
@@ -132,8 +133,8 @@ class Request(Document):
 	
 	def perform_executor_operations(self): 		
 		if self.executor_status == "Pending From Requestor":
-			approver = frappe.get_doc("User",self.approver)
-			self.notify_user([self.requester_email_id,approver.email],"Request Pending","Request Pending On Requestor Side")
+			approver = frappe.get_doc("Employee",self.approver)
+			self.notify_user([self.requester_email_id,approver.user_id],"Request Pending","Request Pending On Requestor Side")
 			comment = """Request status changed to by \"Pending From Requestor\" Executor"""
 			self.add_comment(comment)
 		
@@ -178,6 +179,7 @@ class Request(Document):
 		"""	
 		frappe.sendmail(receiver, subject=subj, message =msg)
 
+
 	def get_executer_list(self):
 		sreq = frappe.get_doc("Sub Request Category",self.sub_request_category)
 		user_list = frappe.db.sql("""select t1.email from `tabUser` t1,`tabUserRole` t2 
@@ -216,13 +218,25 @@ class Request(Document):
 		elif self.allocated_to == 'Executor':
 			self.perform_executor_operations()
 		elif self.allocated_to == 'Ad Approver':
-			self.perform_additional_approver_operations()
-			
+			self.perform_additional_approver_operations()				
+
+	def set_due_date(self):
+		current_user = frappe.session.user
+		executor = self.get_executer_list()
+		if current_user in executor and self.priority and not self.due_date:
+			print "hello"
+			self.due_date = get_due_date(self.as_json())
+			print self.due_date	
+			frappe.db.set_value("Request",self.name,"due_date",self.due_date)
+
+
+
 @frappe.whitelist()
 def get_user_details():
-	return frappe.get_doc("User",frappe.session.user)
-
-
+	current_user = frappe.get_doc("User",frappe.session.user)
+	cell = frappe.db.get_value("Employee",{"user_id":current_user.name},"cell_number")
+	return {'requester_name':current_user.first_name,'email':current_user.email,'cell_number':cell}
+	
 def get_holiday(due_date):
 	tot_hol = frappe.db.sql("""select count(*) from `tabHoliday List` h1,`tabHoliday` h2 
 	where h2.parent = h1.name and h1.name = 'Mycfo' and h2.holiday_date >= %s and  h2.holiday_date <= %s""",(nowdate(),due_date.strftime("%Y-%m-%d")))
@@ -255,11 +269,12 @@ def check_for(check_for,doc):
 	if check_for == 'Requester' and current_doc.get('requester_email_id') != current_user:
 		return "Not Allowed only Requester can Edit this field"
 	if check_for == 'Approver' and emp_user != current_user:
-		return "Not Allowed only approver can edit these fields" 
+		return "Not Allowed only approver can edit these fields"	 
 	if check_for == 'Executor' and current_user not in get_executer_list(current_doc):
 		return "Not Allowed only executor can edit these fields"
 	if check_for == 'Additional Approver' and current_doc.get('additional_approver') != current_user:
 		return "Not Allowed only additional_approver can edit these fields"
+
 	 
 
 def get_approver_list(doctype, txt, searchfield, start, page_len, filters):
@@ -324,3 +339,27 @@ def generate_support_id(source_name):
 	support_id = source_name +'-'+cstr(count)
 	frappe.db.set_value("Request",source_name,"incre",count)
 	return support_id
+
+@frappe.whitelist()
+def status_permission(doc):
+	current_doc = json.loads(doc)
+	emp_user=''
+	executor=''
+	if current_doc.get('approver'):
+		emp_user = frappe.db.get_value("Employee",current_doc.get('approver'),"user_id")
+	if frappe.session.user == emp_user:
+		return {'valid':'true','Existing_user':'Approver'}	
+	if current_doc.get('sub_request_category'):
+		executor = get_executer_list(current_doc)
+	if frappe.session.user in  executor:
+		return {'valid':'true','Existing_user':'Executor'}
+	elif frappe.session.user == current_doc.get('additional_approver'):
+		return {'valid':'true','Existing_user':'Ad_Approver'}
+	elif frappe.session.user == current_doc.get('requester_email_id'):
+		return {'valid': 'true','Existing_user': 'Requester'}	
+	else:
+		return {'valid':'false'}			
+
+			
+
+ 	
