@@ -82,7 +82,7 @@
  "is_submittable": 0, 
  "issingle": 0, 
  "istable": 0, 
- "modified": "2015-12-01 12:54:30.788065", 
+ "modified": "2015-12-08 19:44:25.103598", 
  "modified_by": "Administrator", 
  "module": "Help Desk", 
  "name": "Department Name", 
@@ -112,6 +112,7 @@
  ], 
  "read_only": 0, 
  "read_only_onload": 0, 
+ "search_fields": "name_of_department", 
  "sort_field": "modified", 
  "sort_order": "DESC"
 }

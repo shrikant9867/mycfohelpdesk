@@ -7,6 +7,11 @@ frappe.ui.form.on("Request","onload",function(frm){
 	frm.add_fetch('sub_request_category', 'approval_required', 'approval_required');
 })
 
+frappe.ui.form.on("Request","p_id",function(frm){
+	if(cur_frm.doc.p_id){
+		cur_frm.set_df_property("approver","read_only",0)
+	}
+})
 
 cur_frm.fields_dict['sub_request_category'].get_query = function(doc) {
 	return {
@@ -60,6 +65,7 @@ frappe.ui.form.on("Request", "refresh",function(frm){
 			"doc":cur_frm.doc
 		},
 		callback: function(r) {
+			console.log(r.message)
 			if(r.message.valid == "true"){
 				if(r.message.Existing_user == "Approver"){
 					if(cur_frm.doc.approver_status == "Approved" || cur_frm.doc.approver_status == "Rejected"){
@@ -118,7 +124,7 @@ frappe.ui.form.on("Request", "refresh",function(frm){
 			    	cur_frm.set_df_property("required_information","read_only",1)
 				}
 
-				
+
 				if(r.message.Existing_user == "Requester"){
 					cur_frm.set_df_property("approver_status","read_only",1)
 					cur_frm.set_df_property("executor_status","read_only",1)
@@ -157,13 +163,13 @@ frappe.ui.form.on("Request",{
 		this.validate_field(frm.doc,"Approver",frm)
 	},
 	approver_comments:function(frm){
-		this.validate_field("Approver")	
+		this.validate_field(frm.doc,"Approver",frm)	
 	},
 	more_information:function(frm){
 		this.validate_field(frm.doc,"Approver",frm)
 	},
 	reason_for_rejection:function(frm){
-		this.validate_field("Approver")
+		this.validate_field(frm.doc,"Approver",frm)
 	},
 	priority:function(frm){
 		//this.validate_field(frm.doc,"Executor",frm)
@@ -257,6 +263,7 @@ set_due_date = function(frm){
 	}
 }
 
+<<<<<<< HEAD
 cur_frm.fields_dict['approver'].get_query = function(doc, cdt, cdn) {
 	if (approval_required){
 		return {
@@ -269,4 +276,27 @@ cur_frm.fields_dict['approver'].get_query = function(doc, cdt, cdn) {
 	else{
 		frappe.msgprint("Operational Matrix not linked")
 	}
+=======
+reopen_request = function(frm) {
+	console.log("reopen_request")
+			cur_frm.set_value("request_status","Open")
+			cur_frm.set_value('reopen_count',cur_frm.doc.reopen_count + 1)
+			cur_frm.set_value('current_status',"Request Re opened")
+			cur_frm.set_value('reopend','Yes')
+			refresh_field('request_status')
+			refresh_field('reopen_count')
+			refresh_field('current_status')
+	return frappe.call({
+		method: "help_desk.help_desk.doctype.request.request.send_mail",
+		args: {
+			"doc":cur_frm.doc
+		},
+		callback : function(r){
+			cur_frm.set_value("mail_send",1)
+			refresh_field('mail_send')
+			cur_frm.save();
+			cur_frm.refresh();
+		}
+	})
+>>>>>>> 999dae3c5258fd3499fa5c3aaf25794149a84615
 }
