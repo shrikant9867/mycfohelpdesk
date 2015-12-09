@@ -48,6 +48,8 @@ class Request(Document):
 	def on_update(self):
 		self.build_notification()
 		self.set_due_date()
+		self.close_request()
+
 
 	def build_notification(self):
 		"""
@@ -77,6 +79,8 @@ class Request(Document):
 			self.notify_user([approver.user_id,self.requester_email_id],"Request Created","Request has been created")
 			self.allocated_to = "Approver"
 			frappe.db.set_value("Request",self.name,"allocated_to","Approver")
+			self.current_status = "Request Sent To Approver"
+			frappe.db.set_value("Request",self.name,"current_status","Request Sent To Approver")
 			self.share_document(approver.user_id)
 			self.share_document(self.requester_email_id)
 			comment = """Created Request and assigned to Approver:{approver}""".format(approver=approver.name)
@@ -93,6 +97,8 @@ class Request(Document):
 			self.notify_user(executor,"Request Created","Request have only executer")
 			self.allocated_to = "Executor"
 			frappe.db.set_value("Request",self.name,"allocated_to","Executor")
+			self.current_status = "Request Sent To Executor"
+			frappe.db.set_value("Request",self.name,"current_status","Request Sent To Executor")
 			for email in self.get_executer_names():
 				self.share_document(email)
 			self.share_document(self.requester_email_id)
@@ -110,6 +116,8 @@ class Request(Document):
 			self.notify_user(executor,"Request Approved","Request Approved by Approver")
 			self.allocated_to = "Executor"
 			frappe.db.set_value("Request",self.name,"allocated_to","Executor")
+			self.current_status = "Approver Approved"
+			frappe.db.set_value("Request",self.name,"current_status","Approver Approved")
 			for email in self.get_executer_names():
 				self.share_document(email)
 			self.share_document(self.requester_email_id)
@@ -122,12 +130,16 @@ class Request(Document):
 		elif self.approver_status == 'More Info Required':
 			#send notification to requestor
 			self.notify_user(self.requester_email_id,"More Information","More Information Required")
+			self.current_status = "Approver Required More Information"
+			frappe.db.set_value("Request",self.name,"current_status","Approver Required More Information")
 			comment = """asked for More information from Requestor : {requestor}""".format(requestor=self.requester_email_id)
 			self.add_comment("More Info",comment)
 		
 		elif self.approver_status == 'Rejected':
 			#send notification to requestor
 			self.notify_user(self.requester_email_id,"Rejection of Request","Request Rejected")
+			self.current_status = "Approver Rejected"
+			frappe.db.set_value("Request",self.name,"current_status","Approver Rejected")
 			comment = """Has Rejected the request"""
 			self.add_comment("Rejected",comment)
 	
@@ -135,16 +147,24 @@ class Request(Document):
 		if self.executor_status == "Pending From Requestor":
 			approver = frappe.get_doc("Employee",self.approver)
 			self.notify_user([self.requester_email_id,approver.user_id],"Request Pending","Request Pending On Requestor Side")
+			self.current_status = "Pending From Requestor"
+			frappe.db.set_value("Request",self.name,"current_status","Pending From Requestor")
 			comment = """Request status changed to by \"Pending From Requestor\" Executor"""
 			self.add_comment(comment)
 		
 		elif self.executor_status == "More information need":
 			self.notify_user(self.requester_email_id,"More Information","More Information Required")
+			self.current_status = "Executor Required More Information"
+			frappe.db.set_value("Request",self.name,"current_status","Executor Required More Information")
 			comment = """asked for More information from Requestor : {requestor}""".format(requestor=self.requester_email_id)
 			self.add_comment(comment)
 		
 		elif self.executor_status == "Resolved":
 			self.notify_user(self.requester_email_id,"Resolved Request","Request Have Resolved")
+			self.allocated_to = "Requester"
+			frappe.db.set_value("Request",self.name,"allocated_to","Requester")
+			self.current_status = "Executor Resolved"
+			frappe.db.set_value("Request",self.name,"current_status","Executor Resolved")
 			comment = """set the status as Resolved"""
 			self.add_comment(comment)
 
@@ -152,6 +172,8 @@ class Request(Document):
 			self.notify_user([self.additional_approver],"Request for approval","Request Required Approval")
 			self.allocated_to = "Ad Approver"
 			frappe.db.set_value("Request",self.name,"allocated_to","Ad Approver")
+			self.current_status = "Request Sent To Additional Approver"
+			frappe.db.set_value("Request",self.name,"current_status","Request Sent To Additional Approver")
 			self.share_document(self.additional_approver)	
 
 	def perform_additional_approver_operations(self):
@@ -160,16 +182,22 @@ class Request(Document):
 		
 		if self.additional_approver_status == "Approved":
 			self.notify_user(executor,"Request Approved","Request Approved By Additional Approver")
+			self.current_status = "Additional Approver Approved"
+			frappe.db.set_value("Request",self.name,"current_status","Additional Approver Approved")
 			comment = """ Approved""".format(user=frappe.session.user)
 			self.add_comment(comment)
 		
 		elif self.additional_approver_status == "More Info Required":
 			self.notify_user(executor,"More Information","More Information Required")
+			self.current_status = "Additional Approver Required More Information"
+			frappe.db.set_value("Request",self.name,"current_status","Additional Approver Required More Information")
 			comment = """ asked for More information from Executor""".format(user=frappe.session.user)
 			self.add_comment(comment)
 		
 		elif self.additional_approver_status == "Rejected":
-			self.notify_user(executor,"Rejection of Request","Request Rejected")			
+			self.notify_user(executor,"Rejection of Request","Request Rejected")
+			self.current_status = "Additional Approver Rejected"
+			frappe.db.set_value("Request",self.name,"current_status","Additional Approver Rejected")			
 			comment = """ Rejected""".format(user=frappe.session.user,requestor=self.requester_email_id)
 			self.add_comment(comment)
 
@@ -229,6 +257,11 @@ class Request(Document):
 			print self.due_date	
 			frappe.db.set_value("Request",self.name,"due_date",self.due_date)
 
+	def close_request(self):
+		if self.request_status == "Close":
+			self.current_status = "Request Closed"
+			frappe.db.set_value("Request",self.name,"current_status","Request Closed")		
+
 
 
 @frappe.whitelist()
@@ -257,7 +290,8 @@ def get_executer_list(doc):
 	user_list = frappe.db.sql("""select t1.email from `tabUser` t1,`tabUserRole` t2 
 		where t1.name = t2.parent and t2.role = '{0}'""".format(sreq.executer),as_list =1)
  	chain = itertools.chain(*user_list)
- 	return list(chain)
+ 	list_users = list(chain)
+ 	return list_users
 	
 
 @frappe.whitelist()	
@@ -284,55 +318,11 @@ def get_approver_list(doctype, txt, searchfield, start, page_len, filters):
 	
 	new_op_and_project = [op[0] for op in op_and_project if op]
 	new = ','.join('"{0}"'.format(w) for w in new_op_and_project)
-	approver = frappe.db.sql("""select name from `tabEmployee` where name in
+	approver = frappe.db.sql("""select name,employee_name from `tabEmployee` where name in
 					( select Distinct user_name from `tabOperation And Project Details`t1
 					where t1.parent in ({0}) and t1.role = "EL" or t1.role = "EM" ) """.format(new),as_list=1)
 	
 	return approver
-
-@frappe.whitelist()
-def make_new_request(source_name, target_doc=None):
-	
-	support_id = generate_support_id(source_name)
-
-	def refresh_values(source, target):
-		target.subject = ""
-		target.department_abbriviation = ""
-		target.sub_request_category = ""
-		target.approval_required = ""
-		target.issue_description = ""
-		target.p_id = ""
-		target.approver = ""
-		target.request_status = "Open"
-		target.support_id = support_id
-		target.allocated_to = ""
-		target.additional_approver_status = ""
-		target.more_info_required = ""
-		target.approver_status = ""
-		target.approver_comments = ""
-		target.more_information = ""
-		target.reason_for_rejection = ""
-		target.priority = ""
-		target.due_date = ""
-		target.request_category = ""
-		target.executor_status = ""
-		target.more_information_required = ""
-		target.additional_approval_required = ""
-		target.additional_approver = ""
-		target.additional_approver_status = ""
-		target.additional_approver_comments = ""
-		target.more_info = ""
-		target.reason_of_rejection = ""
-	
-	doclist = get_mapped_doc("Request",source_name,{
-		"Request": {
-			"doctype": "Request",
-		 	# "field_map":{
-		 	# 		"support_id":support_id
-			# }
-		}
-		}, target_doc, refresh_values)
-	return doclist
 
 def generate_support_id(source_name):
 	count = frappe.get_value("Request",source_name,"incre") + 1
@@ -351,8 +341,10 @@ def status_permission(doc):
 		return {'valid':'true','Existing_user':'Approver'}	
 	if current_doc.get('sub_request_category'):
 		executor = get_executer_list(current_doc)
-	if frappe.session.user in  executor:
+		print executor
+	if frappe.session.user in executor:
 		return {'valid':'true','Existing_user':'Executor'}
+	
 	elif frappe.session.user == current_doc.get('additional_approver'):
 		return {'valid':'true','Existing_user':'Ad_Approver'}
 	elif frappe.session.user == current_doc.get('requester_email_id'):
@@ -360,6 +352,14 @@ def status_permission(doc):
 	else:
 		return {'valid':'false'}			
 
-			
+@frappe.whitelist()
+def send_mail(doc):
+	current_doc = json.loads(doc)
+	approver = frappe.db.get_value("Employee",current_doc.get('approver'),"user_id")
+	executor = get_executer_list(current_doc)
+	requester = current_doc.get('requester_email_id')
+	return notify_user([requester,executor,approver],"Request Re-Open","Request Re-Open By Requester")			
 
- 	
+def notify_user(receiver,subj,msg):
+	print "notify"
+	frappe.sendmail(receiver, subject=subj, message =msg)
