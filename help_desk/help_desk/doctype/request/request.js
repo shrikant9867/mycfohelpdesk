@@ -1,3 +1,5 @@
+
+var approval_required = false
 frappe.ui.form.on("Request","onload",function(frm){
 	frm.add_fetch('employee', 'employee_name', 'requester_name');
 	frm.add_fetch('employee', 'cell_number', 'requester_contact_number');
@@ -22,14 +24,7 @@ cur_frm.fields_dict['p_id'].get_query = function(doc) {
 	}
 }
 
-cur_frm.fields_dict['approver'].get_query = function(doc, cdt, cdn) {
-	return {
-		query: "help_desk.help_desk.doctype.request.request.get_approver_list",
-		filters: {
-			'project_id': doc.p_id
-		}
-	}
-}
+
 
 frappe.ui.form.on("Request","on_the_behalf_of",function(frm){
 	if(cur_frm.doc.on_the_behalf_of == "Self"){
@@ -55,6 +50,10 @@ frappe.ui.form.on("Request","on_the_behalf_of",function(frm){
 });
 
 frappe.ui.form.on("Request", "refresh",function(frm){
+	if(frm.doc.on_the_behalf_of){
+		cur_frm.set_df_property("employee", "hidden",1);
+		cur_frm.set_df_property("on_the_behalf_of", "hidden",1);	
+    }
 	return frappe.call({
 		method: "help_desk.help_desk.doctype.request.request.status_permission",
 		args: {
@@ -138,27 +137,11 @@ frappe.ui.form.on("Request", "refresh",function(frm){
 				}	
 			}
 			else{
-
+				//cur_frm.set_read_only();
 			}	
 		}	
 	})
 });
-
-
-
-
-cur_frm.cscript.refresh = function(doc, cdt, cdn) {
-	if(doc.on_the_behalf_of){
-		cur_frm.set_df_property("employee", "hidden",1);
-		cur_frm.set_df_property("on_the_behalf_of", "hidden",1);	
-    }
-    /*if(doc.docstatus == 0){
-    	if(doc.request_status == "Close"){
-       		cur_frm.add_custom_button(__("Re Open"),new_request)
- 		}
-	}*/
-    refresh_field("allocated_to")
-}
 
 frappe.ui.form.on("Request",{
 	required_info:function(frm){
@@ -183,11 +166,11 @@ frappe.ui.form.on("Request",{
 		this.validate_field("Approver")
 	},
 	priority:function(frm){
-		this.validate_field(frm.doc,"Executor",frm)
+		//this.validate_field(frm.doc,"Executor",frm)
 		this.set_due_date(frm)
 	},
 	due_date:function(frm){
-		this.validate_field(frm.doc,"Executor",frm)
+		//this.validate_field(frm.doc,"Executor",frm)
 	},
 	request_category:function(frm){
 		this.validate_field(frm.doc,"Executor",frm)
@@ -215,8 +198,28 @@ frappe.ui.form.on("Request",{
 	},
 	reason_of_rejection:function(frm){
 		this.validate_field(frm.doc,"Additional Approver",frm)
-	}
+	},
+	p_id:function(frm){
+		this.validate_pc_exists(frm)
+	},
 });
+
+validate_pc_exists = function(frm){
+	return frappe.call({
+		method: "help_desk.help_desk.doctype.request.request.check_pc_exists",
+		args:{
+			"doc":cur_frm.doc
+		},
+		callback: function(r) {
+			if (r.message){
+				approval_required = true
+			}			
+		}
+	})
+
+}
+
+
 
 validate_field = function(doc,check_for,frm){
 		//logic to validate
@@ -251,5 +254,19 @@ set_due_date = function(frm){
 				refresh_field('due_date')
 			}
 		})
+	}
+}
+
+cur_frm.fields_dict['approver'].get_query = function(doc, cdt, cdn) {
+	if (approval_required){
+		return {
+			query: "help_desk.help_desk.doctype.request.request.get_approver_list",
+			filters: {
+				'project_id': doc.p_id
+			}
+		}
+	}
+	else{
+		frappe.msgprint("Operational Matrix not linked")
 	}
 }

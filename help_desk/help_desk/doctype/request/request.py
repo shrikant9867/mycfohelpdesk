@@ -47,7 +47,7 @@ class Request(Document):
 
 	def on_update(self):
 		self.build_notification()
-		self.set_due_date()
+		#self.set_due_date()
 
 	def build_notification(self):
 		"""
@@ -220,14 +220,14 @@ class Request(Document):
 		elif self.allocated_to == 'Ad Approver':
 			self.perform_additional_approver_operations()				
 
-	def set_due_date(self):
-		current_user = frappe.session.user
-		executor = self.get_executer_list()
-		if current_user in executor and self.priority and not self.due_date:
-			print "hello"
-			self.due_date = get_due_date(self.as_json())
-			print self.due_date	
-			frappe.db.set_value("Request",self.name,"due_date",self.due_date)
+	# def set_due_date(self):
+	# 	current_user = frappe.session.user
+	# 	executor = self.get_executer_list()
+	# 	if current_user in executor and self.priority and not self.due_date:
+	# 		print "hello"
+	# 		self.due_date = get_due_date(self.as_json())
+	# 		print self.due_date	
+	# 		frappe.db.set_value("Request",self.name,"due_date",self.due_date)
 
 
 
@@ -250,7 +250,7 @@ def get_due_date(doc):
 	holiday	= get_holiday(due_date)
 	tat_with_holiday = holiday*24 + tat - 24
 	due_date_with_holiday = datetime.now() + timedelta(hours=tat_with_holiday)
-	return due_date_with_holiday.strftime("%D")
+	return due_date_with_holiday.strftime("%Y-%m-%d")
 
 def get_executer_list(doc):
 	sreq = frappe.get_doc("Sub Request Category",doc.get('sub_request_category'))
@@ -360,6 +360,13 @@ def status_permission(doc):
 	else:
 		return {'valid':'false'}			
 
-			
-
+@frappe.whitelist()		
+def check_pc_exists(doc):
+	doc = json.loads(doc)
+	op_and_project = frappe.db.sql("""select name from `tabOperation And Project Commercial`
+		where project_commercial = %s""",(doc.get("p_id")),as_list =1)
+	if op_and_project:
+		return True
+	else:
+		return False
  	
