@@ -369,3 +369,16 @@ def send_mail(doc):
 
 def notify_user(receiver,subj,msg):
 	frappe.sendmail(receiver, subject=subj, message =msg)
+
+def get_permission_query_conditions(user):
+	if not user: user = frappe.session.user
+	"""
+		get all shared documents from shared doc list
+		see the names in current doc
+	"""
+	#pass
+	if not user == 'Administrator':
+		documents = frappe.db.sql("""select share_name from 
+			`tabDocShare` where user=%s and share_doctype="Request" """,user,as_dict=1)
+		doc_list = "', '".join([doc.share_name for doc in documents if documents])
+		return """(`tabRequest`.name in ('{doc_list}'))""".format(doc_list=doc_list)

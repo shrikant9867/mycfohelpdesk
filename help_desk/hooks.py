@@ -54,12 +54,12 @@ app_version = "0.0.1"
 # -----------
 # Permissions evaluated in scripted ways
 
-# permission_query_conditions = {
-# 	"Event": "frappe.desk.doctype.event.event.get_permission_query_conditions",
-# }
+permission_query_conditions = {
+	"Request":"help_desk.help_desk.doctype.request.request.get_permission_query_conditions",
+}
 #
 # has_permission = {
-# 	"Event": "frappe.desk.doctype.event.event.has_permission",
+# 	"Event": "help_desk.help_desk.doctype.request.request.get_permission_query_conditions",
 # }
 
 # Document Events
