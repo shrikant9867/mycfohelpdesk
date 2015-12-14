@@ -54,12 +54,16 @@ class Request(Document):
 		"""
 		if self.allocated_to == '':
 			self.notify_to_approver_or_executor()
+			self.add_requetor_and_ticket_details_to_comment()
 		elif self.allocated_to == 'Approver':
 			self.perform_approver_operations()
+			self.add_approver_comments()
 		elif self.allocated_to == 'Executor':
 			self.perform_executor_operations()
+			self.add_executor_comments()
 		elif self.allocated_to == 'Ad Approver':
 			self.perform_additional_approver_operations()	
+			self.add_addn_approver_comments()
 
 	def notify_to_approver_or_executor(self):
 		"""
@@ -103,12 +107,67 @@ class Request(Document):
 			comment = """Created Request and assigned to Executor : {role}""".format(role=sreq.executer)
 			self.add_comment("Created",comment)
 
+	def add_requetor_and_ticket_details_to_comment(self):
+		comment = """Requestor and Ticket Details:\n
+		Department: {dept}.\n
+		Sub Request Category: {sub_req}.\n
+		Subject: {subj}.\n
+		Issue Desc: {desc}.\n""".format(dept=self.department_abbriviation,sub_req=self.sub_request_category,subj=self.subject,desc=self.issue_description)
+		
+		if self.approval_required == 'Yes': comment += """
+		Project: {project}.\n
+		Approver: {approver}.""".format(project=self.p_id,approver=self.approver)
+		self.add_comment("Comment",comment)
+
+	def add_executor_comments(self):
+		comment = """Executor Details:\n
+		Priority: {proirity}.\n
+		Due Date: {due_date}.\n
+		Request Category: {r_cat}.\n
+		Executor Status: {status}.\n""".format(proirity=self.proirity,due_date=self.due_date,r_cat=self.request_category,status=self.executor_status)
+		
+		self.add_comment("Comment",comment)
+
+	def add_addn_approver_comments(self):
+		comment = """Additional Approver Details:\n
+		Addn-Approver Status: {status}.\n""".format(status=self.approver_status)
+		
+		if self.approver_status == 'Approved': 
+			comment += """
+		Addn-Approver's Comment: {comment}.\n""".format(comment=self.additional_approver_comments)
+		
+		elif self.approver_status == 'More Info Required':
+			comment += """\n
+		Addn-Approver's Comment: {comment}.\n""".format(comment=self.more_information)
+		
+		elif self.approver_status == 'Rejected':
+			comment += """\n
+		Addn-Approver's Comment: {comment}.\n""".format(comment=self.reason_for_rejection)
+		
+		self.add_comment("Comment",comment)
+
+	def add_approver_comments(self):
+		comment = """Approver Details:\n
+		Approver Status: {status}.\n""".format(status=self.approver_status)
+		
+		if self.approver_status == 'Approved': 
+			comment += """
+		Approver's Comment: {comment}.\n""".format(comment=self.approver_comments)
+		
+		elif self.approver_status == 'More Info Required':
+			comment += """\n
+		Approver's Comment: {comment}.\n""".format(comment=self.more_info)
+		
+		elif self.approver_status == 'Rejected':
+			comment += """\n
+		Approver's Comment: {comment}.\n""".format(comment=self.reason_for_rejection)
+		
+		self.add_comment("Comment",comment)		
+
 	
 	def perform_approver_operations(self):
 		executor = self.get_executer_list()
 		executor.append(self.requester_email_id)
-		
-
 		if self.approver_status == 'Approved':
 			self.notify_user(executor,"Request Approved","Request Approved by Approver")
 			self.allocated_to = "Executor"
@@ -123,7 +182,6 @@ class Request(Document):
 			self.add_comment("Approved",comment)
 
 			#send notification to executor and requestor
-		
 		elif self.approver_status == 'More Info Required':
 			#send notification to requestor
 			self.notify_user(self.requester_email_id,"More Information","More Information Required")
