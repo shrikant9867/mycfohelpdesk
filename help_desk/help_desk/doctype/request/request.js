@@ -29,8 +29,6 @@ cur_frm.fields_dict['p_id'].get_query = function(doc) {
 	}
 }
 
-
-
 frappe.ui.form.on("Request","on_the_behalf_of",function(frm){
 	if(cur_frm.doc.on_the_behalf_of == "Self"){
 		return frappe.call({
@@ -59,6 +57,13 @@ frappe.ui.form.on("Request", "refresh",function(frm){
 		cur_frm.set_df_property("employee", "hidden",1);
 		cur_frm.set_df_property("on_the_behalf_of", "hidden",1);	
     }
+    if(cur_frm.doc.__islocal){
+    	console.log("__islocal")
+    	cur_frm.set_df_property("request_status","read_only",1)
+    }
+    else{
+    	cur_frm.set_df_property("request_status","read_only",0)	
+    }
 	return frappe.call({
 		method: "help_desk.help_desk.doctype.request.request.status_permission",
 		args: {
@@ -68,14 +73,22 @@ frappe.ui.form.on("Request", "refresh",function(frm){
 			console.log(r.message)
 			if(r.message.valid == "true"){
 				if(r.message.Existing_user == "Approver"){
-					if(cur_frm.doc.approver_status == "Approved" || cur_frm.doc.approver_status == "Rejected"){
-						cur_frm.set_df_property("approver_status","read_only",1)
+					if((cur_frm.doc.approver_status == "Approved" || cur_frm.doc.approver_status == "Rejected" || cur_frm.doc.reopend == "Yes")&&(cur_frm.doc.editable_value == 0 || cur_frm.doc.editable_value == 2)){
+						cur_frm.set_df_property("approver_status","read_only",1) 
+						cur_frm.set_df_property("approver_comments","read_only",1)
+			    		cur_frm.set_df_property("more_information","read_only",1)
+			    		cur_frm.set_df_property("reason_for_rejection","read_only",1)
 					}
-					cur_frm.set_df_property("request_status","read_only",1)
+					if(cur_frm.doc.reopend == "Yes" && cur_frm.doc.editable_value == 1){
+						cur_frm.set_df_property("approver_status","read_only",0)
+						cur_frm.set_df_property("approver_comments","read_only",0)
+			    		cur_frm.set_df_property("more_information","read_only",0)
+			    		cur_frm.set_df_property("reason_for_rejection","read_only",0)
+					}
+				/*	cur_frm.set_df_property("request_status","read_only",1)*/
 					cur_frm.set_df_property("executor_status","read_only",1)
 					cur_frm.set_df_property("additional_approver_status","read_only",1)
 					cur_frm.set_df_property("priority","read_only",1)
-    				/*cur_frm.set_df_property("due_date","read_only",1)*/
 			    	cur_frm.set_df_property("request_category","read_only",1)
 			    	cur_frm.set_df_property("additional_approval_required","read_only",1)
 			    	cur_frm.set_df_property("additional_approver","read_only",1)
@@ -88,8 +101,19 @@ frappe.ui.form.on("Request", "refresh",function(frm){
 
 
 				if(r.message.Existing_user == "Executor"){
-					if(cur_frm.doc.executor_status == "Resolved"){
+					if((cur_frm.doc.executor_status == "Resolved" || cur_frm.doc.reopend == "Yes")&&(cur_frm.doc.editable_value == 0 || cur_frm.doc.editable_value == 3 || cur_frm.doc.editable_value == 4)){
 						cur_frm.set_df_property("executor_status","read_only",1)
+						cur_frm.set_df_property("priority","read_only",1)
+				    	cur_frm.set_df_property("request_category","read_only",1)
+					}
+					if(cur_frm.doc.executor_status == "Additional Approver Required"){
+				    	cur_frm.set_df_property("additional_approver","read_only",1)
+					}
+					if(cur_frm.doc.reopend == "Yes" && cur_frm.doc.editable_value == 2 || cur_frm.doc.editable_value == 4){
+						cur_frm.set_df_property("executor_status","read_only",0)
+						cur_frm.set_df_property("priority","read_only",0)
+				    	cur_frm.set_df_property("request_category","read_only",0)
+				    	cur_frm.set_df_property("additional_approver","read_only",0)
 					}
 					cur_frm.set_df_property("request_status","read_only",1)
 					cur_frm.set_df_property("approver_status","read_only",1)
@@ -106,14 +130,22 @@ frappe.ui.form.on("Request", "refresh",function(frm){
 
 
 				if(r.message.Existing_user == "Ad_Approver"){
-					if(cur_frm.doc.additional_approver_status == "Approved" || cur_frm.doc.additional_approver_status == "Rejected"){
+					if((cur_frm.doc.additional_approver_status == "Approved" || cur_frm.doc.additional_approver_status == "Rejected" || cur_frm.doc.reopend == "Yes")&&cur_frm.doc.editable_value == 0){
 						cur_frm.set_df_property("additional_approver_status","read_only",1)
+						cur_frm.set_df_property("additional_approver_comments","read_only",1)
+				    	cur_frm.set_df_property("more_info","read_only",1)
+				    	cur_frm.set_df_property("reason_of_rejection","read_only",1)
+					}
+					if(cur_frm.doc.reopend == "Yes" && cur_frm.doc.editable_value == 3){
+						cur_frm.set_df_property("additional_approver_status","read_only",0)
+						cur_frm.set_df_property("additional_approver_comments","read_only",0)
+				    	cur_frm.set_df_property("more_info","read_only",0)
+				    	cur_frm.set_df_property("reason_of_rejection","read_only",0)
 					}
 					cur_frm.set_df_property("request_status","read_only",1)
 					cur_frm.set_df_property("approver_status","read_only",1)
 					cur_frm.set_df_property("executor_status","read_only",1)
 					cur_frm.set_df_property("priority","read_only",1)
-    				/*cur_frm.set_df_property("due_date","read_only",1)*/
 			    	cur_frm.set_df_property("request_category","read_only",1)
 			    	cur_frm.set_df_property("additional_approval_required","read_only",1)
 			    	cur_frm.set_df_property("additional_approver","read_only",1)
@@ -130,7 +162,6 @@ frappe.ui.form.on("Request", "refresh",function(frm){
 					cur_frm.set_df_property("executor_status","read_only",1)
 					cur_frm.set_df_property("additional_approver_status","read_only",1)
 					cur_frm.set_df_property("priority","read_only",1)
-    				/*cur_frm.set_df_property("due_date","read_only",1)*/
 			    	cur_frm.set_df_property("request_category","read_only",1)
 			    	cur_frm.set_df_property("additional_approval_required","read_only",1)
 			    	cur_frm.set_df_property("additional_approver","read_only",1)
@@ -145,64 +176,84 @@ frappe.ui.form.on("Request", "refresh",function(frm){
 			else{
 				//cur_frm.set_read_only();
 			}	
-		}	
+		}
+
 	})
 });
 
+
 frappe.ui.form.on("Request",{
 	required_info:function(frm){
+		console.log("required_info")
 		this.validate_field(frm.doc,"Requester",frm)
 	},
 	required_information:function(frm){
+		console.log("required_information")
 		this.validate_field(frm.doc,"Requester",frm)
 	},
 	request_status:function(frm){
+		console.log("request_status")
 		this.validate_field(frm.doc,"Requester",frm)
 	},
 	approver_status:function(frm){
+		console.log("approver_status")
 		this.validate_field(frm.doc,"Approver",frm)
 	},
 	approver_comments:function(frm){
+		console.log("approver_comments")
 		this.validate_field(frm.doc,"Approver",frm)	
 	},
 	more_information:function(frm){
+		console.log("more_information")
 		this.validate_field(frm.doc,"Approver",frm)
 	},
 	reason_for_rejection:function(frm){
+		console.log("reason_of_rejection")
 		this.validate_field(frm.doc,"Approver",frm)
 	},
 	priority:function(frm){
-		//this.validate_field(frm.doc,"Executor",frm)
+		console.log("priority")
+		this.validate_field(frm.doc,"Executor",frm)
 		this.set_due_date(frm)
 	},
 	due_date:function(frm){
-		//this.validate_field(frm.doc,"Executor",frm)
+		console.log("due_date")
+		this.validate_field(frm.doc,"Executor",frm)
 	},
 	request_category:function(frm){
+		console.log("request_category")
 		this.validate_field(frm.doc,"Executor",frm)
 	},
 	executor_status:function(frm){
+		console.log("executor_status")
 		this.validate_field(frm.doc,"Executor",frm)
 	},
 	more_information_required:function(frm){
+		console.log("more_information_required")
 		this.validate_field(frm.doc,"Executor",frm)
 	},
 	additional_approval_required:function(frm){
+		console.log("additional_approval_required")
 		this.validate_field(frm.doc,"Executor",frm)	
 	},
 	additional_approver:function(frm){
+		console.log("additional_approver")
 		this.validate_field(frm.doc,"Executor",frm)
 	},
 	additional_approver_status:function(frm){
+		console.log("additional_approver_status")
 		this.validate_field(frm.doc,"Additional Approver",frm)
 	},
 	additional_approver_comments:function(frm){
+		console.log("additional_approver_comments")
 		this.validate_field(frm.doc,"Additional Approver",frm)
 	},
 	more_info:function(frm){
+		console.log("more_info")
 		this.validate_field(frm.doc,"Additional Approver",frm)
 	},
 	reason_of_rejection:function(frm){
+		console.log("reason_of_rejection")
 		this.validate_field(frm.doc,"Additional Approver",frm)
 	},
 	p_id:function(frm){
@@ -222,10 +273,7 @@ validate_pc_exists = function(frm){
 			}			
 		}
 	})
-
 }
-
-
 
 validate_field = function(doc,check_for,frm){
 		//logic to validate
@@ -242,9 +290,12 @@ validate_field = function(doc,check_for,frm){
 				msgprint(r.message);
 				cur_frm.reload_doc()
 			}
+			else if(!r.message && cur_frm.doc.reopend == "Yes"){
+				console.log("editable_value")
+				cur_frm.set_value("editable_value",0)
+				refresh_field('editable_value')
+			}
 		}
-		
-
 	})
 }
 
@@ -277,24 +328,31 @@ cur_frm.fields_dict['approver'].get_query = function(doc, cdt, cdn) {
 	}
 }
 
+cur_frm.fields_dict['employee'].get_query = function(doc, cdt, cdn) {
+	if (cur_frm.doc.on_the_behalf_of == "On The Behalf Of"){
+		return {
+			query: "help_desk.help_desk.doctype.request.request.filter_employee"
+		}
+	}
+}
+
+cur_frm.cscript.refresh = function(doc, cdt, cdn) {
+	if(doc.docstatus == 0){
+    	if(doc.request_status == "Close"){
+       		cur_frm.add_custom_button(__("Re Open"),reopen_request)
+ 		}
+	}
+}	
+
 reopen_request = function(frm) {
-	cur_frm.set_value("request_status","Open")
+	cur_frm.set_value('reopend','Yes')
+	cur_frm.doc.editable_value = 1
+	console.log(cur_frm.doc.editable_value)
+	cur_frm.doc.request_status = "Open"
 	cur_frm.set_value('reopen_count',cur_frm.doc.reopen_count + 1)
 	cur_frm.set_value('current_status',"Request Re opened")
-	cur_frm.set_value('reopend','Yes')
 	refresh_field('request_status')
 	refresh_field('reopen_count')
 	refresh_field('current_status')
-	return frappe.call({
-		method: "help_desk.help_desk.doctype.request.request.send_mail",
-		args: {
-			"doc":cur_frm.doc
-		},
-		callback : function(r){
-			cur_frm.set_value("mail_send",1)
-			refresh_field('mail_send')
-			cur_frm.save();
-			cur_frm.refresh();
-		}
-	})
+	refresh_field('editable_value')
 }
