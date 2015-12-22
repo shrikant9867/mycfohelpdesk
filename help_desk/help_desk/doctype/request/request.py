@@ -68,11 +68,15 @@ class Request(Document):
 		elif self.allocated_to == 'Ad Approver':
 			self.perform_additional_approver_operations()	
 			self.add_addn_approver_comments()
+		elif self.allocated_to == "Requester":
+			self.add_requester_comments()
+			self.perform_requester_operations()
+		
+
+
 
 	def change_current_status(self):
-		print "change current_status"
 		if self.current_status == "Request Re opened":
-			print "hi"
 			self.allocated_to = "Create"
 			frappe.db.set_value("Request",self.name,"allocated_to","Create")
 
@@ -135,6 +139,16 @@ class Request(Document):
 		Approver: {approver}.""".format(project=self.p_id,approver=self.approver)
 		self.add_comment("Comment",comment)
 
+	def add_requester_comments(self):
+		comment = ''
+		if(self.approver_status == "More Info Required"):
+			comment = """Required Information For Approver:{required_info}:\n
+		Requester Reply To :{Approver}""".format(required_info=self.required_info,Approver=self.approver)
+		
+		elif(self.executor_status == "More information need"):
+			comment = """Requester Reply To : Executor"""	
+		self.add_comment("Comment",comment)	
+
 	def add_executor_comments(self):
 		comment = """Executor Details:\n
 		Priority: {priority}.\n
@@ -154,11 +168,11 @@ class Request(Document):
 		
 		elif self.approver_status == 'More Info Required':
 			comment += """\n
-		Addn-Approver's Comment: {comment}.\n""".format(comment=self.more_information)
+		Addn-Approver's Comment: {comment}.\n""".format(comment=self.more_info)
 		
 		elif self.approver_status == 'Rejected':
 			comment += """\n
-		Addn-Approver's Comment: {comment}.\n""".format(comment=self.reason_for_rejection)
+		Addn-Approver's Comment: {comment}.\n""".format(comment=self.reason_of_rejection)
 		
 		self.add_comment("Comment",comment)
 
@@ -172,19 +186,27 @@ class Request(Document):
 		
 		elif self.approver_status == 'More Info Required':
 			comment += """\n
-		Approver's Comment: {comment}.\n""".format(comment=self.more_info)
+		Approver's Comment: {comment}.\n""".format(comment=self.more_information)
 		
 		elif self.approver_status == 'Rejected':
 			comment += """\n
 		Approver's Comment: {comment}.\n""".format(comment=self.reason_for_rejection)
 		
-		self.add_comment("Comment",comment)		
+		self.add_comment("Comment",comment)
 
-	
+	def perform_requester_operations(self):
+		if(self.allocated_to == "Requester" and self.executor_status == "More information need"):
+			self.allocated_to = "Executor"
+			frappe.db.set_value("Request",self.name,"allocated_to","Executor")
+		elif(self.allocated_to == "Requester" and self.approver_status == "More Info Required"):
+			self.allocated_to = "Approver"
+			frappe.db.set_value("Request",self.name,"allocated_to","Approver")
+							
+
+		
 	def perform_approver_operations(self):
 		executor = self.get_executer_list()
 		executor.append(self.requester_email_id)
-		print "approver"
 		if self.approver_status == 'Approved':
 			self.notify_user(executor,"Request Approved","Request Approved by Approver")
 			self.allocated_to = "Executor"
@@ -204,6 +226,8 @@ class Request(Document):
 		elif self.approver_status == 'More Info Required':
 			#send notification to requestor
 			self.notify_user(self.requester_email_id,"More Information","More Information Required")
+			self.allocated_to = "Requester"
+			frappe.db.set_value("Request",self.name,"allocated_to","Requester")
 			self.current_status = "Approver Required More Information"
 			frappe.db.set_value("Request",self.name,"current_status","Approver Required More Information")
 			comment = """asked for More information from Requestor : {requestor}""".format(requestor=self.requester_email_id)
@@ -235,6 +259,8 @@ class Request(Document):
 		
 		elif self.executor_status == "More information need":
 			self.notify_user(self.requester_email_id,"More Information","More Information Required")
+			self.allocated_to = "Requester"
+			frappe.db.set_value("Request",self.name,"allocated_to","Requester")
 			self.current_status = "Executor Required More Information"
 			frappe.db.set_value("Request",self.name,"current_status","Executor Required More Information")
 			comment = """asked for More information from Requestor : {requestor}""".format(requestor=self.requester_email_id)
@@ -245,7 +271,6 @@ class Request(Document):
 			frappe.db.set_value("Request",self.name,"current_status","Executor WIP")
 
 		elif self.executor_status == 'Additional Approver Required':
-			print "additional_approver"
 			self.notify_user([self.additional_approver],"Request for approval","Request Required Approval")
 			self.allocated_to = "Ad Approver"
 			frappe.db.set_value("Request",self.name,"allocated_to","Ad Approver")
@@ -353,12 +378,7 @@ class Request(Document):
 	def close_request(self):
 		if self.request_status == "Close":
 			self.current_status = "Request Closed"
-			frappe.db.set_value("Request",self.name,"current_status","Request Closed")		
-		
-	# def requester_reopen(self):
-	# 	if self.reopend == "Yes":
-	# 		comment = """ Re Open""".format(user=frappe.session.user,requestor=self.requester_email_id)
-	# 		self.add_comment(comment)
+			frappe.db.set_value("Request",self.name,"current_status","Request Closed")
 
 @frappe.whitelist()
 def get_user_details():
@@ -446,9 +466,9 @@ def status_permission(doc):
 	elif frappe.session.user == current_doc.get('additional_approver'):
 		return {'valid':'true','Existing_user':'Ad_Approver'}
 	
-	elif frappe.session.user == current_doc.get('requester_email_id'):
+	elif frappe.session.user:
 		return {'valid': 'true','Existing_user': 'Requester'}	
-	
+		 # == current_doc.get('requester_email_id')
 	else:
 		return {'valid':'false'}			
 
