@@ -4,6 +4,8 @@
 
 from __future__ import unicode_literals
 import frappe
+import json
+import string
 from frappe.model.document import Document
 from frappe.utils import cstr, flt, getdate, comma_and, cint
 from frappe import _
@@ -12,4 +14,4 @@ from erpnext.controllers.item_variant import get_variant, copy_attributes_to_var
 class DepartmentName(Document):
 	
 	def autoname(self):
-		self.name = self.department_abbriviation.upper()
+		self.name = self.department_abbriviation.upper()							

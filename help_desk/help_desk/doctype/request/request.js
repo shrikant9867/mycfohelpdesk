@@ -85,7 +85,7 @@ frappe.ui.form.on("Request", "refresh",function(frm){
 			    		cur_frm.set_df_property("more_information","read_only",0)
 			    		cur_frm.set_df_property("reason_for_rejection","read_only",0)
 					}
-				/*	cur_frm.set_df_property("request_status","read_only",1)*/
+					cur_frm.set_df_property("request_status","read_only",1)
 					cur_frm.set_df_property("executor_status","read_only",1)
 					cur_frm.set_df_property("additional_approver_status","read_only",1)
 					cur_frm.set_df_property("priority","read_only",1)
@@ -177,7 +177,6 @@ frappe.ui.form.on("Request", "refresh",function(frm){
 				//cur_frm.set_read_only();
 			}	
 		}
-
 	})
 });
 
@@ -351,8 +350,5 @@ reopen_request = function(frm) {
 	cur_frm.doc.request_status = "Open"
 	cur_frm.set_value('reopen_count',cur_frm.doc.reopen_count + 1)
 	cur_frm.set_value('current_status',"Request Re opened")
-	refresh_field('request_status')
-	refresh_field('reopen_count')
-	refresh_field('current_status')
-	refresh_field('editable_value')
+	refresh_field(['request_status','reopen_count','current_status','editable_value'])
 }
