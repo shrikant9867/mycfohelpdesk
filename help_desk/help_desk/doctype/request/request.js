@@ -58,7 +58,6 @@ frappe.ui.form.on("Request", "refresh",function(frm){
 		cur_frm.set_df_property("on_the_behalf_of", "hidden",1);	
     }
     if(cur_frm.doc.__islocal){
-    	console.log("__islocal")
     	cur_frm.set_df_property("request_status","read_only",1)
     }
     else{
@@ -70,7 +69,6 @@ frappe.ui.form.on("Request", "refresh",function(frm){
 			"doc":cur_frm.doc
 		},
 		callback: function(r) {
-			console.log(r.message)
 			if(r.message.valid == "true"){
 				if(r.message.Existing_user == "Approver"){
 					if((cur_frm.doc.approver_status == "Approved" || cur_frm.doc.approver_status == "Rejected" || cur_frm.doc.reopend == "Yes")&&(cur_frm.doc.editable_value == 0 || cur_frm.doc.editable_value == 2)){
@@ -183,76 +181,58 @@ frappe.ui.form.on("Request", "refresh",function(frm){
 
 frappe.ui.form.on("Request",{
 	required_info:function(frm){
-		console.log("required_info")
 		this.validate_field(frm.doc,"Requester",frm)
 	},
 	required_information:function(frm){
-		console.log("required_information")
 		this.validate_field(frm.doc,"Requester",frm)
 	},
 	request_status:function(frm){
-		console.log("request_status")
 		this.validate_field(frm.doc,"Requester",frm)
 	},
 	approver_status:function(frm){
-		console.log("approver_status")
 		this.validate_field(frm.doc,"Approver",frm)
 	},
 	approver_comments:function(frm){
-		console.log("approver_comments")
 		this.validate_field(frm.doc,"Approver",frm)	
 	},
 	more_information:function(frm){
-		console.log("more_information")
 		this.validate_field(frm.doc,"Approver",frm)
 	},
 	reason_for_rejection:function(frm){
-		console.log("reason_of_rejection")
 		this.validate_field(frm.doc,"Approver",frm)
 	},
 	priority:function(frm){
-		console.log("priority")
 		this.validate_field(frm.doc,"Executor",frm)
 		this.set_due_date(frm)
 	},
 	due_date:function(frm){
-		console.log("due_date")
 		this.validate_field(frm.doc,"Executor",frm)
 	},
 	request_category:function(frm){
-		console.log("request_category")
 		this.validate_field(frm.doc,"Executor",frm)
 	},
 	executor_status:function(frm){
-		console.log("executor_status")
 		this.validate_field(frm.doc,"Executor",frm)
 	},
 	more_information_required:function(frm){
-		console.log("more_information_required")
 		this.validate_field(frm.doc,"Executor",frm)
 	},
 	additional_approval_required:function(frm){
-		console.log("additional_approval_required")
 		this.validate_field(frm.doc,"Executor",frm)	
 	},
 	additional_approver:function(frm){
-		console.log("additional_approver")
 		this.validate_field(frm.doc,"Executor",frm)
 	},
 	additional_approver_status:function(frm){
-		console.log("additional_approver_status")
 		this.validate_field(frm.doc,"Additional Approver",frm)
 	},
 	additional_approver_comments:function(frm){
-		console.log("additional_approver_comments")
 		this.validate_field(frm.doc,"Additional Approver",frm)
 	},
 	more_info:function(frm){
-		console.log("more_info")
 		this.validate_field(frm.doc,"Additional Approver",frm)
 	},
 	reason_of_rejection:function(frm){
-		console.log("reason_of_rejection")
 		this.validate_field(frm.doc,"Additional Approver",frm)
 	},
 	p_id:function(frm){
@@ -290,7 +270,6 @@ validate_field = function(doc,check_for,frm){
 				cur_frm.reload_doc()
 			}
 			else if(!r.message && cur_frm.doc.reopend == "Yes"){
-				console.log("editable_value")
 				cur_frm.set_value("editable_value",0)
 				refresh_field('editable_value')
 			}
@@ -346,7 +325,6 @@ cur_frm.cscript.refresh = function(doc, cdt, cdn) {
 reopen_request = function(frm) {
 	cur_frm.set_value('reopend','Yes')
 	cur_frm.doc.editable_value = 1
-	console.log(cur_frm.doc.editable_value)
 	cur_frm.doc.request_status = "Open"
 	cur_frm.set_value('reopen_count',cur_frm.doc.reopen_count + 1)
 	cur_frm.set_value('current_status',"Request Re opened")

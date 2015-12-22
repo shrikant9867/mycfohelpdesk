@@ -76,9 +76,7 @@ class Request(Document):
 
 
 	def change_current_status(self):
-		print "change current_status"
 		if self.current_status == "Request Re opened":
-			print "hi"
 			self.allocated_to = "Create"
 			frappe.db.set_value("Request",self.name,"allocated_to","Create")
 
@@ -209,7 +207,6 @@ class Request(Document):
 	def perform_approver_operations(self):
 		executor = self.get_executer_list()
 		executor.append(self.requester_email_id)
-		print "approver"
 		if self.approver_status == 'Approved':
 			self.notify_user(executor,"Request Approved","Request Approved by Approver")
 			self.allocated_to = "Executor"
@@ -274,7 +271,6 @@ class Request(Document):
 			frappe.db.set_value("Request",self.name,"current_status","Executor WIP")
 
 		elif self.executor_status == 'Additional Approver Required':
-			print "additional_approver"
 			self.notify_user([self.additional_approver],"Request for approval","Request Required Approval")
 			self.allocated_to = "Ad Approver"
 			frappe.db.set_value("Request",self.name,"allocated_to","Ad Approver")
