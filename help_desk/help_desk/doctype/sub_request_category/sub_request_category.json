@@ -116,7 +116,7 @@
    "print_hide": 0, 
    "read_only": 0, 
    "report_hide": 0, 
-   "reqd": 0, 
+   "reqd": 1, 
    "search_index": 0, 
    "set_only_once": 0, 
    "unique": 0
@@ -129,7 +129,7 @@
  "is_submittable": 0, 
  "issingle": 0, 
  "istable": 0, 
- "modified": "2015-12-08 19:45:33.854691", 
+ "modified": "2015-12-28 17:18:37.197375", 
  "modified_by": "Administrator", 
  "module": "Help Desk", 
  "name": "Sub Request Category", 

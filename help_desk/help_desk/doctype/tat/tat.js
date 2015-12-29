@@ -3,5 +3,7 @@ frappe.ui.form.on("TAT","tat",function(frm){
 		cur_frm.doc.tat = ""
 		refresh_field("tat")
 		msgprint(__("Please Enter Positive Value For TAT"))
+		frm.reload();	
 	}
 })
+

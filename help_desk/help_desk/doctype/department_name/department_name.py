@@ -14,4 +14,13 @@ from erpnext.controllers.item_variant import get_variant, copy_attributes_to_var
 class DepartmentName(Document):
 	
 	def autoname(self):
-		self.name = self.department_abbriviation.upper()							
+		self.name = self.department_abbriviation.upper()
+
+	def validate(self):
+		self.validate_name_of_department()
+
+	def validate_name_of_department(self):
+		if(self.name_of_department):
+			self.name_of_department = self.name_of_department.title()
+		if(self.department_abbriviation):
+			self.department_abbriviation = self.department_abbriviation.upper()										
