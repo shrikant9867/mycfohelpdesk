@@ -51,7 +51,7 @@ class Request(Document):
 		self.close_request()
 		if self.reopend == "Yes" and self.reopen_count == 0:
 			self.send_mail()
-
+		
 	def build_notification(self):
 		"""
 			Decide whom to notify
@@ -106,7 +106,7 @@ class Request(Document):
 			self.share_document(self.requester_email_id)
 			comment = """Created Request and assigned to Approver:{approver}""".format(approver=approver.name)
 			self.add_comment("Created",comment)	
-
+			
 
 		elif self.approval_required == 'No':
 			"""
@@ -143,7 +143,7 @@ class Request(Document):
 		comment = ''
 		if(self.approver_status == "More Info Required"):
 			comment = """Required Information For Approver:{required_info}:\n
-		Requester Reply To :{Approver}""".format(required_info=self.required_info,Approver=self.approver)
+		Requester Reply To Approver:{Approver}""".format(required_info=self.required_info,Approver=self.approver)
 		
 		elif(self.executor_status == "More information need"):
 			comment = """Requester Reply To : Executor"""	
@@ -198,9 +198,13 @@ class Request(Document):
 		if(self.allocated_to == "Requester" and self.executor_status == "More information need"):
 			self.allocated_to = "Executor"
 			frappe.db.set_value("Request",self.name,"allocated_to","Executor")
+			self.editable_value = 4
+			frappe.db.set_value("Request",self.name,"editable_value",4)
 		elif(self.allocated_to == "Requester" and self.approver_status == "More Info Required"):
 			self.allocated_to = "Approver"
 			frappe.db.set_value("Request",self.name,"allocated_to","Approver")
+			self.editable_value = 1
+			frappe.db.set_value("Request",self.name,"editable_value",1)
 							
 
 		
@@ -230,6 +234,8 @@ class Request(Document):
 			frappe.db.set_value("Request",self.name,"allocated_to","Requester")
 			self.current_status = "Approver Required More Information"
 			frappe.db.set_value("Request",self.name,"current_status","Approver Required More Information")
+			self.editable_value = 1
+			frappe.db.set_value("Request",self.name,"editable_value",1)
 			comment = """asked for More information from Requestor : {requestor}""".format(requestor=self.requester_email_id)
 			self.add_comment("More Info",comment)
 		
@@ -238,6 +244,8 @@ class Request(Document):
 			self.notify_user(self.requester_email_id,"Rejection of Request","Request Rejected")
 			self.current_status = "Approver Rejected"
 			frappe.db.set_value("Request",self.name,"current_status","Approver Rejected")
+			self.editable_value = 2
+			frappe.db.set_value("Request",self.name,"editable_value",2)
 			comment = """Has Rejected the request"""
 			self.add_comment("Rejected",comment)
 		
@@ -246,7 +254,7 @@ class Request(Document):
 		if self.executor_status == "Pending From Requestor":
 			if self.approver:
 				approver = frappe.get_doc("Employee",self.approver)
-				self.notify_user([self.requester_email_id,approver.user_id],"Request Pending","Request Pending On Requestor Side")
+				self.notify_user([self.requester_email_id,approver.user_id],"Request Pending","Request Pending On Requester Side")
 				self.current_status = "Pending From Requester Side"
 				frappe.db.set_value("Request",self.name,"current_status","Pending From Requester Side")
 				comment = """Request status changed to by \"Pending From Requestor\" Executor"""
@@ -263,6 +271,8 @@ class Request(Document):
 			frappe.db.set_value("Request",self.name,"allocated_to","Requester")
 			self.current_status = "Executor Required More Information"
 			frappe.db.set_value("Request",self.name,"current_status","Executor Required More Information")
+			self.editable_value = 4
+			frappe.db.set_value("Request",self.name,"editable_value",4)
 			comment = """asked for More information from Requestor : {requestor}""".format(requestor=self.requester_email_id)
 			self.add_comment(comment)
 
@@ -289,7 +299,11 @@ class Request(Document):
 			self.editable_value = 0
 			frappe.db.set_value("Request",self.name,"editable_value",0)
 			comment = """set the status as Resolved"""
-			self.add_comment(comment)		
+			self.add_comment(comment)
+
+		elif self.additional_approver_status == "More Info Required" and current_status == "Additional Approver Required More Information":
+			self.editable_value = 3
+			frappe.db.set_value("Request",self.name,"editable_value",3)			
 
 	def perform_additional_approver_operations(self):
 		executor = self.get_executer_list()
@@ -312,13 +326,13 @@ class Request(Document):
 			frappe.db.set_value("Request",self.name,"allocated_to","Executor")
 			self.current_status = "Additional Approver Required More Information"
 			frappe.db.set_value("Request",self.name,"current_status","Additional Approver Required More Information")
+			self.editable_value = 4
+			frappe.db.set_value("Request",self.name,"editable_value",4)	
 			comment = """ asked for More information from Executor""".format(user=frappe.session.user)
 			self.add_comment(comment)
 		
 		elif self.additional_approver_status == "Rejected":
 			self.notify_user(executor,"Rejection of Request","Request Rejected")
-			# self.additional_approver_required = "Yes"
-			# frappe.db.set_value("Request",self.name,"additional_approver_required","Yes")
 			self.allocated_to = "Executor"
 			frappe.db.set_value("Request",self.name,"allocated_to","Executor")
 			self.current_status = "Additional Approver Rejected"
@@ -336,11 +350,31 @@ class Request(Document):
 
 
 	def get_executer_list(self):
-		sreq = frappe.get_doc("Sub Request Category",self.sub_request_category)
-		user_list = frappe.db.sql("""select t1.email from `tabUser` t1,`tabUserRole` t2 
-			where t1.name = t2.parent and t2.role = '{0}'""".format(sreq.executer),as_list =1)
-	 	chain = itertools.chain(*user_list)
-	 	return list(chain)
+		if(self.approver):
+			approver = frappe.get_doc("Employee",self.approver)
+			list0 = [self.requester_email_id,approver.user_id]
+			list1 = tuple([x.encode('UTF8') for x in list0 if x])
+			sreq = frappe.get_doc("Sub Request Category",self.sub_request_category)
+			user_list = frappe.db.sql("""select t1.email from `tabUser` t1,`tabUserRole` t2 
+				where t1.name = t2.parent and t2.role = '{0}' and t1.email not in {1} """.format(sreq.executer,list1),as_list =1)
+		 	if(user_list == []):
+	 			frappe.throw(_("For This Sub Reueqst Category No One have role of {0} As Executor ,Please Give Any User To The Role Of {0}")
+				.format(sreq.executer))
+		 	chain = itertools.chain(*user_list)
+		 	return list(chain)
+		else:
+			list0 = [x.encode('UTF8') for x in [self.requester_email_id] if x]
+			list1 = list0[0]
+			sreq = frappe.get_doc("Sub Request Category",self.sub_request_category)
+			user_list = frappe.db.sql("""select t1.email from `tabUser` t1,`tabUserRole` t2 
+			where t1.name = t2.parent and t2.role = '{0}' and t1.email <> '{1}' """.format(sreq.executer,list1),as_list =1)
+	 		print user_list
+	 		if(user_list == []):
+	 			frappe.throw(_("For This Sub Reueqst Category No One have role of {0} As Executor ,Please Give Any User To The Role Of {0}")
+				.format(sreq.executer))
+	 		chain = itertools.chain(*user_list)
+	 		return list(chain)
+		
 
 	def get_executer_names(self):
 		sreq = frappe.get_doc("Sub Request Category",self.sub_request_category)
@@ -402,14 +436,27 @@ def get_due_date(doc):
 	return due_date_with_holiday.strftime("%Y-%m-%d")
 
 def get_executer_list(doc):
-	sreq = frappe.get_doc("Sub Request Category",doc.get('sub_request_category'))
-	user_list = frappe.db.sql("""select t1.email from `tabUser` t1,`tabUserRole` t2 
-		where t1.name = t2.parent and t2.role = '{0}'""".format(sreq.executer),as_list =1)
- 	chain = itertools.chain(*user_list)
- 	list_users = list(chain)
- 	return list_users
+	emp_user=''
+	doc['approver'] = ''
+	if doc['approver']:
+		emp_user = frappe.db.get_value("Employee",doc['approver'],"user_id")
+		list0 = [doc['requester_email_id'],emp_user]
+		list1 = tuple([x.encode('UTF8') for x in list0 if x])
+		sreq = frappe.get_doc("Sub Request Category",doc.get('sub_request_category'))
+		user_list = frappe.db.sql("""select t1.email from `tabUser` t1,`tabUserRole` t2 
+		where t1.name = t2.parent and t2.role = '{0}' and t1.email not in {1}""".format(sreq.executer,list1),as_list =1)
+		chain = itertools.chain(*user_list)
+		list_users = list(chain)
+ 		return list_users	
+	else:
+		list1 = (doc['requester_email_id'])
+		sreq = frappe.get_doc("Sub Request Category",doc.get('sub_request_category'))
+		user_list = frappe.db.sql("""select t1.email from `tabUser` t1,`tabUserRole` t2 
+		where t1.name = t2.parent and t2.role = '{0}' and t1.email <> '{1}' """.format(sreq.executer,list1),as_list =1)
+ 		chain = itertools.chain(*user_list)
+ 		list_users = list(chain)
+ 		return list_users
 	
-
 @frappe.whitelist()	
 def check_for(check_for,doc):
 	current_doc = json.loads(doc)
@@ -417,7 +464,7 @@ def check_for(check_for,doc):
 	if check_for == 'Approver' and current_doc.get('approver'):
 		emp_user = frappe.db.get_value("Employee",current_doc.get('approver'),"user_id")
 	if check_for == 'Requester' and current_doc.get('requester_email_id') != current_user:
-		return "Not Allowed only Requester can Edit this field"
+		return "Not Allowed Only Requester Can Change Status"
 	if check_for == 'Approver' and emp_user != current_user:
 		return "Not Allowed only approver can edit these fields"	 
 	if check_for == 'Executor' and current_user not in get_executer_list(current_doc):
@@ -428,16 +475,16 @@ def check_for(check_for,doc):
 	 
 
 def get_approver_list(doctype, txt, searchfield, start, page_len, filters):
-	
 	op_and_project = frappe.db.sql("""select name from `tabOperation And Project Commercial`
 		where project_commercial = %s""",(filters.get("project_id")),as_list =1)
-	
 	new_op_and_project = [op[0] for op in op_and_project if op]
 	new = ','.join('"{0}"'.format(w) for w in new_op_and_project)
 	approver = frappe.db.sql("""select name,employee_name from `tabEmployee` where name in
 					( select Distinct user_name from `tabOperation And Project Details`t1
-					where t1.parent in ({0}) and t1.role = "EL" or t1.role = "EM" ) """.format(new),as_list=1)
-	
+					where t1.parent in ({0})) and user_id <> %s """.format(new),filters['doc']['requester_email_id'],as_list=1)
+	# approver = frappe.db.sql("""select name,employee_name from `tabEmployee` where name in
+	# 				( select Distinct user_name from `tabOperation And Project Details`t1
+	# 				where t1.parent in ({0}) and t1.role = "EL" or t1.role = "EM") """.format(new),as_list=1)
 	return approver
 
 def generate_support_id(source_name):
@@ -467,8 +514,7 @@ def status_permission(doc):
 		return {'valid':'true','Existing_user':'Ad_Approver'}
 	
 	elif frappe.session.user:
-		return {'valid': 'true','Existing_user': 'Requester'}	
-		 # == current_doc.get('requester_email_id')
+		return {'valid': 'true','Existing_user': 'Requester'}		
 	else:
 		return {'valid':'false'}			
 
@@ -500,3 +546,23 @@ def get_permission_query_conditions(user):
 def filter_employee(doctype, txt, searchfield, start, page_len, filters):
 	emp_name = frappe.db.sql("""select name,employee_name from `tabEmployee` where user_id != %s""",frappe.session.user,as_list=1)
 	return emp_name	
+
+
+@frappe.whitelist()
+def filter_ad_approver(doctype, txt, searchfield, start, page_len, filters):
+	emp_user=''
+	executor=''
+	filters['doc']['approver'] = ''
+	if filters['doc']['approver']:
+		emp_user = frappe.db.get_value("Employee",filters['doc']['approver'],"user_id")
+	if filters['doc']['sub_request_category']:
+		sreq = frappe.get_doc("Sub Request Category",filters['doc']['sub_request_category'])
+		user_list = frappe.db.sql("""select t1.email from `tabUser` t1,`tabUserRole` t2 
+		where t1.name = t2.parent and t2.role = '{0}'""".format(sreq.executer),as_list =1)
+	 	chain = itertools.chain(*user_list)
+ 		executor = list(chain)
+	list1 = [filters['doc']['requester_email_id'],emp_user]
+	chain = itertools.chain(executor,list1)
+	list2 = tuple([x.encode('UTF8') for x in list(chain) if x])
+ 	ad_approver	= frappe.db.sql("""select email,first_name,last_name from `tabUser` where email not in {0}""".format(list2),as_list=1)
+ 	return ad_approver

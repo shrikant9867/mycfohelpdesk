@@ -70,6 +70,7 @@ frappe.ui.form.on("Request", "refresh",function(frm){
 		},
 		callback: function(r) {
 			if(r.message.valid == "true"){
+				console.log(r.message)
 				if(r.message.Existing_user == "Approver"){
 					if((cur_frm.doc.approver_status == "Approved" || cur_frm.doc.approver_status == "Rejected" || cur_frm.doc.reopend == "Yes")&&(cur_frm.doc.editable_value == 0 || cur_frm.doc.editable_value == 2)){
 						cur_frm.set_df_property("approver_status","read_only",1) 
@@ -78,6 +79,7 @@ frappe.ui.form.on("Request", "refresh",function(frm){
 			    		cur_frm.set_df_property("reason_for_rejection","read_only",1)
 					}
 					if(cur_frm.doc.reopend == "Yes" && cur_frm.doc.editable_value == 1){
+						console.log("approver")
 						cur_frm.set_df_property("approver_status","read_only",0)
 						cur_frm.set_df_property("approver_comments","read_only",0)
 			    		cur_frm.set_df_property("more_information","read_only",0)
@@ -95,6 +97,7 @@ frappe.ui.form.on("Request", "refresh",function(frm){
 			    	cur_frm.set_df_property("reason_of_rejection","read_only",1)
 			    	cur_frm.set_df_property("required_info","read_only",1)
 			    	cur_frm.set_df_property("required_information","read_only",1)
+			    	cur_frm.set_df_property("more_information_required","read_only",1)
 				}
 
 
@@ -105,9 +108,15 @@ frappe.ui.form.on("Request", "refresh",function(frm){
 				    	cur_frm.set_df_property("request_category","read_only",1)
 					}
 					if(cur_frm.doc.executor_status == "Additional Approver Required"){
+						console.log("correct")
+						cur_frm.set_df_property("executor_status","read_only",1)
 				    	cur_frm.set_df_property("additional_approver","read_only",1)
 					}
-					if(cur_frm.doc.reopend == "Yes" && cur_frm.doc.editable_value == 2 || cur_frm.doc.editable_value == 4){
+					if(cur_frm.doc.additional_approver_status == "Approved" || cur_frm.doc.additional_approver_status == "Rejected"){
+						cur_frm.set_df_property("executor_status","read_only",0)
+				    	cur_frm.set_df_property("additional_approver","read_only",0)
+					}
+					if(cur_frm.doc.reopend == "Yes" && (cur_frm.doc.editable_value == 2 || cur_frm.doc.editable_value == 4)){
 						cur_frm.set_df_property("executor_status","read_only",0)
 						cur_frm.set_df_property("priority","read_only",0)
 				    	cur_frm.set_df_property("request_category","read_only",0)
@@ -152,6 +161,7 @@ frappe.ui.form.on("Request", "refresh",function(frm){
 			    	cur_frm.set_df_property("reason_for_rejection","read_only",1)
 			    	cur_frm.set_df_property("required_info","read_only",1)
 			    	cur_frm.set_df_property("required_information","read_only",1)
+			    	cur_frm.set_df_property("more_information_required","read_only",1)
 				}
 
 
@@ -169,6 +179,7 @@ frappe.ui.form.on("Request", "refresh",function(frm){
 			    	cur_frm.set_df_property("additional_approver_comments","read_only",1)
 			    	cur_frm.set_df_property("more_info","read_only",1)
 			    	cur_frm.set_df_property("reason_of_rejection","read_only",1)
+			    	cur_frm.set_df_property("more_information_required","read_only",1)
 				}	
 			}
 			else{
@@ -297,7 +308,8 @@ cur_frm.fields_dict['approver'].get_query = function(doc, cdt, cdn) {
 		return {
 			query: "help_desk.help_desk.doctype.request.request.get_approver_list",
 			filters: {
-				'project_id': doc.p_id
+				'project_id': doc.p_id,
+				'doc' : cur_frm.doc
 			}
 		}
 	}
@@ -305,6 +317,18 @@ cur_frm.fields_dict['approver'].get_query = function(doc, cdt, cdn) {
 		frappe.msgprint("Operational Matrix not linked")
 	}
 }
+
+cur_frm.fields_dict['additional_approver'].get_query = function(doc, cdt, cdn) {
+	if (cur_frm.doc.executor_status == "Additional Approver Required"){
+		return {
+			query: "help_desk.help_desk.doctype.request.request.filter_ad_approver",
+			filters: {
+				'doc': cur_frm.doc
+			}
+		}
+	}
+}
+
 
 cur_frm.fields_dict['employee'].get_query = function(doc, cdt, cdn) {
 	if (cur_frm.doc.on_the_behalf_of == "On The Behalf Of"){
