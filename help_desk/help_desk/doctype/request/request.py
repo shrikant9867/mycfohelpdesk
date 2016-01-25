@@ -547,13 +547,11 @@ def filter_employee(doctype, txt, searchfield, start, page_len, filters):
 	emp_name = frappe.db.sql("""select name,employee_name from `tabEmployee` where user_id != %s""",frappe.session.user,as_list=1)
 	return emp_name	
 
-
 @frappe.whitelist()
 def filter_ad_approver(doctype, txt, searchfield, start, page_len, filters):
 	emp_user=''
 	executor=''
-	filters['doc']['approver'] = ''
-	if filters['doc']['approver']:
+	if filters['doc']['approval_required'] == "Yes":
 		emp_user = frappe.db.get_value("Employee",filters['doc']['approver'],"user_id")
 	if filters['doc']['sub_request_category']:
 		sreq = frappe.get_doc("Sub Request Category",filters['doc']['sub_request_category'])

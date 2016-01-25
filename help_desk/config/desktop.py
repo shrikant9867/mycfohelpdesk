@@ -6,7 +6,7 @@ def get_data():
 	return {
 		"Help Desk": {
 			"color": "green",
-			"icon": "icon-th",
+			"icon": "icon-ticket",
 			"type": "module",
 			"label": _("Help Desk")
 		}
