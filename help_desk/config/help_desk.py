@@ -40,5 +40,18 @@ def get_data():
 					"description": _("Sub Request"),
 				},
 			]
+		},
+		{
+			"label": _("Standard Reports"),
+			"icon": "icon-star",
+			"items": [
+				{
+					"type": "report",
+					"is_query_report": True,
+					"name": "Helpdesk",
+					"description": _("Request Report"),
+					"doctype": "Request",
+				}
+			]
 		}
 	]		

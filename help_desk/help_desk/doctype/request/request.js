@@ -7,12 +7,6 @@ frappe.ui.form.on("Request","onload",function(frm){
 	frm.add_fetch('sub_request_category', 'approval_required', 'approval_required');
 })
 
-frappe.ui.form.on("Request","p_id",function(frm){
-	if(cur_frm.doc.p_id){
-		cur_frm.set_df_property("approver","read_only",0)
-	}
-})
-
 cur_frm.fields_dict['sub_request_category'].get_query = function(doc) {
 	return {
 		filters: {
@@ -42,7 +36,7 @@ frappe.ui.form.on("Request","on_the_behalf_of",function(frm){
 			} 
 		})
 	}		
-	if(cur_frm.doc.on_the_behalf_of == "On The Behalf Of"){
+	if(cur_frm.doc.on_the_behalf_of == "Others"){
 		frm.doc.requester_name = ""
 		frm.doc.requester_email_id = ""
 		frm.doc.requester_contact_number = ""
@@ -72,123 +66,79 @@ frappe.ui.form.on("Request", "refresh",function(frm){
 			if(r.message.valid == "true"){
 				console.log(r.message)
 				if(r.message.Existing_user == "Approver"){
-					if((cur_frm.doc.approver_status == "Approved" || cur_frm.doc.approver_status == "Rejected" || cur_frm.doc.reopend == "Yes")&&(cur_frm.doc.editable_value == 0 || cur_frm.doc.editable_value == 2)){
-						cur_frm.set_df_property("approver_status","read_only",1) 
-						cur_frm.set_df_property("approver_comments","read_only",1)
-			    		cur_frm.set_df_property("more_information","read_only",1)
-			    		cur_frm.set_df_property("reason_for_rejection","read_only",1)
+					if((cur_frm.doc.approver_status == "Approved" || cur_frm.doc.approver_status == "Rejected" || cur_frm.doc.reopend == "Yes")&&(cur_frm.doc.editable_value != 1)){	
+						cd_fields = ['approver_status','approver_comments','more_information','reason_for_rejection']
+						make_fields_read_only(cd_fields)
 					}
 					if(cur_frm.doc.reopend == "Yes" && cur_frm.doc.editable_value == 1){
-						console.log("approver")
-						cur_frm.set_df_property("approver_status","read_only",0)
-						cur_frm.set_df_property("approver_comments","read_only",0)
-			    		cur_frm.set_df_property("more_information","read_only",0)
-			    		cur_frm.set_df_property("reason_for_rejection","read_only",0)
+						cd_fields = ['approver_status','approver_comments','more_information','reason_for_rejection']
+						make_fields_editable(cd_fields)
 					}
-					cur_frm.set_df_property("request_status","read_only",1)
-					cur_frm.set_df_property("executor_status","read_only",1)
-					cur_frm.set_df_property("additional_approver_status","read_only",1)
-					cur_frm.set_df_property("priority","read_only",1)
-			    	cur_frm.set_df_property("request_category","read_only",1)
-			    	cur_frm.set_df_property("additional_approval_required","read_only",1)
-			    	cur_frm.set_df_property("additional_approver","read_only",1)
-					cur_frm.set_df_property("additional_approver_comments","read_only",1)
-			    	cur_frm.set_df_property("more_info","read_only",1)
-			    	cur_frm.set_df_property("reason_of_rejection","read_only",1)
-			    	cur_frm.set_df_property("required_info","read_only",1)
-			    	cur_frm.set_df_property("required_information","read_only",1)
-			    	cur_frm.set_df_property("more_information_required","read_only",1)
+					cd_fields1 = ['request_status','additional_approver_status','executor_status','priority','request_category','additional_approval_required',
+									'additional_approver','additional_approver_comments','more_info','reason_of_rejection','required_info','required_information',
+									'more_information_required','more_info_of_executor']
+					make_fields_read_only(cd_fields1)
 				}
-
 
 				if(r.message.Existing_user == "Executor"){
-					if((cur_frm.doc.executor_status == "Resolved" || cur_frm.doc.reopend == "Yes")&&(cur_frm.doc.editable_value == 0 || cur_frm.doc.editable_value == 3 || cur_frm.doc.editable_value == 4)){
-						cur_frm.set_df_property("executor_status","read_only",1)
-						cur_frm.set_df_property("priority","read_only",1)
-				    	cur_frm.set_df_property("request_category","read_only",1)
+					/*if((cur_frm.doc.executor_status == "Resolved" || cur_frm.doc.reopend == "Yes")&&(cur_frm.doc.editable_value == 0 || cur_frm.doc.editable_value == 3 || cur_frm.doc.editable_value == 4)){*/
+					if((cur_frm.doc.executor_status == "Resolved" || cur_frm.doc.reopend == "Yes")&&(cur_frm.doc.editable_value != 1 || cur_frm.doc.editable_value != 2)){
+						cd_fields = ['executor_status','priority','request_category']
+						make_fields_read_only(cd_fields)
 					}
-					if(cur_frm.doc.executor_status == "Additional Approver Required"){
-						console.log("correct")
-						cur_frm.set_df_property("executor_status","read_only",1)
-				    	cur_frm.set_df_property("additional_approver","read_only",1)
-					}
-					if(cur_frm.doc.additional_approver_status == "Approved" || cur_frm.doc.additional_approver_status == "Rejected"){
-						cur_frm.set_df_property("executor_status","read_only",0)
-				    	cur_frm.set_df_property("additional_approver","read_only",0)
+					if(cur_frm.doc.executor_status == "Additional Approver Required" || (cur_frm.doc.executor_status == "Additional Approver Required" && cur_frm.doc.reopend == "Yes")){
+						cd_fields = ['executor_status','additional_approver']
+						make_fields_read_only(cd_fields)
+					}	
+					if((cur_frm.doc.additional_approver_status == "Approved" || cur_frm.doc.additional_approver_status == "Rejected") && cur_frm.doc.executor_status == "Additional Approver Required" && !cur_frm.doc.reopend){
+						cd_fields = ['executor_status','additional_approver']
+						make_fields_editable(cd_fields)
 					}
 					if(cur_frm.doc.reopend == "Yes" && (cur_frm.doc.editable_value == 2 || cur_frm.doc.editable_value == 4)){
-						cur_frm.set_df_property("executor_status","read_only",0)
-						cur_frm.set_df_property("priority","read_only",0)
-				    	cur_frm.set_df_property("request_category","read_only",0)
-				    	cur_frm.set_df_property("additional_approver","read_only",0)
+						cd_fields = ['executor_status','priority','request_category','additional_approver']
+						make_fields_editable(cd_fields)
 					}
-					cur_frm.set_df_property("request_status","read_only",1)
-					cur_frm.set_df_property("approver_status","read_only",1)
-					cur_frm.set_df_property("additional_approver_status","read_only",1)
-					cur_frm.set_df_property("approver_comments","read_only",1)
-			    	cur_frm.set_df_property("more_information","read_only",1)
-			    	cur_frm.set_df_property("reason_for_rejection","read_only",1)
-			    	cur_frm.set_df_property("additional_approver_comments","read_only",1)
-			    	cur_frm.set_df_property("more_info","read_only",1)
-			    	cur_frm.set_df_property("reason_of_rejection","read_only",1)
-			    	cur_frm.set_df_property("required_info","read_only",1)
-			    	cur_frm.set_df_property("required_information","read_only",1)
+					cd_fields1 = ['request_status','approver_status','additional_approver_status','approver_comments','more_information','reason_for_rejection',
+								'reason_of_rejection','additional_approver_comments','more_info','required_info','required_information']
+					make_fields_read_only(cd_fields1)
 				}
-
 
 				if(r.message.Existing_user == "Ad_Approver"){
+					cd_fields1 = ['request_status','approver_status','executor_status','priority','request_category','additional_approval_required',
+									'additional_approver','approver_comments','more_information','reason_for_rejection','required_info','required_information','more_information_required','more_info_of_executor']
+					make_fields_read_only(cd_fields1)				
 					if((cur_frm.doc.additional_approver_status == "Approved" || cur_frm.doc.additional_approver_status == "Rejected" || cur_frm.doc.reopend == "Yes")&&cur_frm.doc.editable_value == 0){
-						cur_frm.set_df_property("additional_approver_status","read_only",1)
-						cur_frm.set_df_property("additional_approver_comments","read_only",1)
-				    	cur_frm.set_df_property("more_info","read_only",1)
-				    	cur_frm.set_df_property("reason_of_rejection","read_only",1)
+						cd_fields = ['additional_approver_status','additional_approver_comments','more_info','reason_of_rejection']
+						make_fields_read_only(cd_fields)
 					}
 					if(cur_frm.doc.reopend == "Yes" && cur_frm.doc.editable_value == 3){
-						cur_frm.set_df_property("additional_approver_status","read_only",0)
-						cur_frm.set_df_property("additional_approver_comments","read_only",0)
-				    	cur_frm.set_df_property("more_info","read_only",0)
-				    	cur_frm.set_df_property("reason_of_rejection","read_only",0)
+						cd_fields = ['additional_approver_status','additional_approver_comments','more_info','reason_of_rejection']
+						make_fields_editable(cd_fields)
 					}
-					cur_frm.set_df_property("request_status","read_only",1)
-					cur_frm.set_df_property("approver_status","read_only",1)
-					cur_frm.set_df_property("executor_status","read_only",1)
-					cur_frm.set_df_property("priority","read_only",1)
-			    	cur_frm.set_df_property("request_category","read_only",1)
-			    	cur_frm.set_df_property("additional_approval_required","read_only",1)
-			    	cur_frm.set_df_property("additional_approver","read_only",1)
-			    	cur_frm.set_df_property("approver_comments","read_only",1)
-			    	cur_frm.set_df_property("more_information","read_only",1)
-			    	cur_frm.set_df_property("reason_for_rejection","read_only",1)
-			    	cur_frm.set_df_property("required_info","read_only",1)
-			    	cur_frm.set_df_property("required_information","read_only",1)
-			    	cur_frm.set_df_property("more_information_required","read_only",1)
 				}
 
-
 				if(r.message.Existing_user == "Requester"){
-					cur_frm.set_df_property("approver_status","read_only",1)
-					cur_frm.set_df_property("executor_status","read_only",1)
-					cur_frm.set_df_property("additional_approver_status","read_only",1)
-					cur_frm.set_df_property("priority","read_only",1)
-			    	cur_frm.set_df_property("request_category","read_only",1)
-			    	cur_frm.set_df_property("additional_approval_required","read_only",1)
-			    	cur_frm.set_df_property("additional_approver","read_only",1)
-			    	cur_frm.set_df_property("approver_comments","read_only",1)
-			    	cur_frm.set_df_property("more_information","read_only",1)
-			    	cur_frm.set_df_property("reason_for_rejection","read_only",1)
-			    	cur_frm.set_df_property("additional_approver_comments","read_only",1)
-			    	cur_frm.set_df_property("more_info","read_only",1)
-			    	cur_frm.set_df_property("reason_of_rejection","read_only",1)
-			    	cur_frm.set_df_property("more_information_required","read_only",1)
+					cd_fields = ['approver_status','executor_status','additional_approver_status','priority','request_category','additional_approval_required','additional_approver','approver_comments',
+									'more_information','reason_for_rejection','additional_approver_comments','reason_of_rejection','more_information_required','more_info_of_executor']
+					make_fields_read_only(cd_fields)
 				}	
-			}
-			else{
-				//cur_frm.set_read_only();
 			}	
 		}
 	})
 });
 
+
+make_fields_read_only = function(cd_fields){
+	$.each(cd_fields, function(index, value){
+		cur_frm.set_df_property(value, "read_only", 1);	
+	})
+}
+
+make_fields_editable = function(cd_fields){
+	$.each(cd_fields, function(index, value){
+		cur_frm.set_df_property(value, "read_only", 0);	
+	})
+}
 
 frappe.ui.form.on("Request",{
 	required_info:function(frm){
@@ -331,7 +281,7 @@ cur_frm.fields_dict['additional_approver'].get_query = function(doc, cdt, cdn) {
 
 
 cur_frm.fields_dict['employee'].get_query = function(doc, cdt, cdn) {
-	if (cur_frm.doc.on_the_behalf_of == "On The Behalf Of"){
+	if (cur_frm.doc.on_the_behalf_of == "Others"){
 		return {
 			query: "help_desk.help_desk.doctype.request.request.filter_employee"
 		}
@@ -352,5 +302,6 @@ reopen_request = function(frm) {
 	cur_frm.doc.request_status = "Open"
 	cur_frm.set_value('reopen_count',cur_frm.doc.reopen_count + 1)
 	cur_frm.set_value('current_status',"Request Re opened")
-	refresh_field(['request_status','reopen_count','current_status','editable_value'])
+	cur_frm.set_value('allocated_to',"Create")
+	refresh_field(['request_status','reopen_count','current_status','editable_value','allocated_to'])
 }

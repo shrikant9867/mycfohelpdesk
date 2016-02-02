@@ -1,0 +1,18 @@
+{
+ "add_total_row": 0, 
+ "apply_user_permissions": 1, 
+ "creation": "2016-01-30 10:30:40.174031", 
+ "disabled": 0, 
+ "docstatus": 0, 
+ "doctype": "Report", 
+ "is_standard": "Yes", 
+ "modified": "2016-02-01 12:03:51.269986", 
+ "modified_by": "Administrator", 
+ "module": "Help Desk", 
+ "name": "Helpdesk", 
+ "owner": "Administrator", 
+ "query": "select\n`tabRequest`.name as \"Request Id:Link/Request:200\",\n`tabRequest`.requester_name as \"Requester:Data:100\",\n`tabRequest`.requester_email_id as \"Requester Email Id:Data:170\",\n`tabRequest`.sub_request_category as \"Sub Request Category:Data:150\",\n`tabRequest`.request_category as \"Request Category:Data:150\",\n`tabRequest`.subject as \"Subject:Data:150\",\n`tabRequest`.priority as \"Priority:Data:80\",\n`tabRequest`.current_status as \"Current Status:Data:200\",\n`tabRequest`.request_status as \"Status:Data:80\"\nfrom \n`tabRequest`", 
+ "ref_doctype": "Request", 
+ "report_name": "Helpdesk", 
+ "report_type": "Query Report"
+}
