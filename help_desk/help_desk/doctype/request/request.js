@@ -65,13 +65,9 @@ frappe.ui.form.on("Request", "refresh",function(frm){
 			if(r.message.valid == "true"){
 				console.log(r.message)
 				if(r.message.Existing_user == "Approver"){
-					if((cur_frm.doc.approver_status == "Approved" || cur_frm.doc.approver_status == "Rejected" || cur_frm.doc.reopend == "Yes")&&(cur_frm.doc.editable_value != 1)){	
+					if((cur_frm.doc.approver_status == "Approved" || cur_frm.doc.approver_status == "Rejected")&&(cur_frm.doc.editable_value != 1)){	
 						cd_fields = ['approver_status','approver_comments','more_information','reason_for_rejection']
 						make_fields_read_only(cd_fields)
-					}
-					if(cur_frm.doc.reopend == "Yes" && cur_frm.doc.editable_value == 1){
-						cd_fields = ['approver_status','approver_comments','more_information','reason_for_rejection']
-						make_fields_editable(cd_fields)
 					}
 					cd_fields1 = ['request_status','additional_approver_status','executor_status','priority','request_category','additional_approval_required',
 									'additional_approver','additional_approver_comments','more_info','reason_of_rejection','required_info','required_information',
@@ -80,20 +76,15 @@ frappe.ui.form.on("Request", "refresh",function(frm){
 				}
 
 				if(r.message.Existing_user == "Executor"){
-					/*if((cur_frm.doc.executor_status == "Resolved" || cur_frm.doc.reopend == "Yes")&&(cur_frm.doc.editable_value == 0 || cur_frm.doc.editable_value == 3 || cur_frm.doc.editable_value == 4)){*/
-					if((cur_frm.doc.executor_status == "Resolved" || cur_frm.doc.reopend == "Yes")&&(cur_frm.doc.editable_value != 1 && cur_frm.doc.editable_value != 2)){
+					if(cur_frm.doc.executor_status == "Resolved"){
 						cd_fields = ['executor_status','priority','request_category']
 						make_fields_read_only(cd_fields)
 					}
-					if(cur_frm.doc.executor_status == "Additional Approver Required" || (cur_frm.doc.executor_status == "Additional Approver Required" && cur_frm.doc.reopend == "Yes")){
+					if(cur_frm.doc.executor_status == "Additional Approver Required"){
 						cd_fields = ['executor_status','additional_approver']
 						make_fields_read_only(cd_fields)
-					}	
-					if((cur_frm.doc.additional_approver_status == "Approved" || cur_frm.doc.additional_approver_status == "Rejected") && cur_frm.doc.executor_status == "Additional Approver Required" && !cur_frm.doc.reopend){
-						cd_fields = ['executor_status','additional_approver']
-						make_fields_editable(cd_fields)
 					}
-					if(cur_frm.doc.reopend == "Yes" && (cur_frm.doc.editable_value == 2 || cur_frm.doc.editable_value == 4)){
+					if(cur_frm.doc.editable_value == 1 || cur_frm.doc.editable_value == 2 || cur_frm.doc.editable_value == 4){
 						cd_fields = ['executor_status','priority','request_category','additional_approver']
 						make_fields_editable(cd_fields)
 					}
@@ -102,23 +93,19 @@ frappe.ui.form.on("Request", "refresh",function(frm){
 					make_fields_read_only(cd_fields1)
 				}
 
-				if(r.message.Existing_user == "Ad_Approver"){
-					cd_fields1 = ['request_status','approver_status','executor_status','priority','request_category','additional_approval_required',
-									'additional_approver','approver_comments','more_information','reason_for_rejection','required_info','required_information','more_information_required','more_info_of_executor']
-					make_fields_read_only(cd_fields1)				
-					if((cur_frm.doc.additional_approver_status == "Approved" || cur_frm.doc.additional_approver_status == "Rejected" || cur_frm.doc.reopend == "Yes")&&cur_frm.doc.editable_value == 0){
+				if(r.message.Existing_user == "Ad_Approver"){				
+					if((cur_frm.doc.additional_approver_status == "Approved" || cur_frm.doc.additional_approver_status == "Rejected")&&(cur_frm.doc.editable_value != 3)){
 						cd_fields = ['additional_approver_status','additional_approver_comments','more_info','reason_of_rejection']
 						make_fields_read_only(cd_fields)
 					}
-					if(cur_frm.doc.reopend == "Yes" && cur_frm.doc.editable_value == 3){
-						cd_fields = ['additional_approver_status','additional_approver_comments','more_info','reason_of_rejection']
-						make_fields_editable(cd_fields)
-					}
+					cd_fields1 = ['request_status','approver_status','executor_status','priority','request_category','additional_approval_required',
+									'additional_approver','approver_comments','more_information','reason_for_rejection','required_info','required_information','more_information_required','more_info_of_executor']
+					make_fields_read_only(cd_fields1)
 				}
 
 				if(r.message.Existing_user == "Requester"){
 					cd_fields = ['approver_status','executor_status','additional_approver_status','priority','request_category','additional_approval_required','additional_approver','approver_comments',
-									'more_information','reason_for_rejection','additional_approver_comments','reason_of_rejection','more_information_required','more_info_of_executor']
+									'more_information','reason_for_rejection','additional_approver_comments','reason_of_rejection','more_information_required','more_info_of_executor','more_info']
 					make_fields_read_only(cd_fields)
 				}	
 			}	
@@ -140,64 +127,12 @@ make_fields_editable = function(cd_fields){
 }
 
 frappe.ui.form.on("Request",{
-	required_info:function(frm){
-		this.validate_field(frm.doc,"Requester",frm)
-	},
-	required_information:function(frm){
-		this.validate_field(frm.doc,"Requester",frm)
-	},
-	request_status:function(frm){
-		this.validate_field(frm.doc,"Requester",frm)
-	},
-	approver_status:function(frm){
-		this.validate_field(frm.doc,"Approver",frm)
-	},
-	approver_comments:function(frm){
-		this.validate_field(frm.doc,"Approver",frm)	
-	},
-	more_information:function(frm){
-		this.validate_field(frm.doc,"Approver",frm)
-	},
-	reason_for_rejection:function(frm){
-		this.validate_field(frm.doc,"Approver",frm)
-	},
-	priority:function(frm){
-		this.validate_field(frm.doc,"Executor",frm)
-		this.set_due_date(frm)
-	},
-	due_date:function(frm){
-		this.validate_field(frm.doc,"Executor",frm)
-	},
-	request_category:function(frm){
-		this.validate_field(frm.doc,"Executor",frm)
-	},
-	executor_status:function(frm){
-		this.validate_field(frm.doc,"Executor",frm)
-	},
-	more_information_required:function(frm){
-		this.validate_field(frm.doc,"Executor",frm)
-	},
-	additional_approval_required:function(frm){
-		this.validate_field(frm.doc,"Executor",frm)	
-	},
-	additional_approver:function(frm){
-		this.validate_field(frm.doc,"Executor",frm)
-	},
-	additional_approver_status:function(frm){
-		this.validate_field(frm.doc,"Additional Approver",frm)
-	},
-	additional_approver_comments:function(frm){
-		this.validate_field(frm.doc,"Additional Approver",frm)
-	},
-	more_info:function(frm){
-		this.validate_field(frm.doc,"Additional Approver",frm)
-	},
-	reason_of_rejection:function(frm){
-		this.validate_field(frm.doc,"Additional Approver",frm)
-	},
 	p_id:function(frm){
-		this.validate_pc_exists(frm)
-	},
+			this.validate_pc_exists(frm)
+		},
+	priority:function(frm){
+		this.set_due_date(frm)
+	}	
 });
 
 validate_pc_exists = function(frm){
@@ -210,29 +145,6 @@ validate_pc_exists = function(frm){
 			if (r.message){
 				approval_required = true
 			}			
-		}
-	})
-}
-
-validate_field = function(doc,check_for,frm){
-		//logic to validate
-		//if not valid user show message and reset the field
-
-	return frappe.call({
-		method: "help_desk.help_desk.doctype.request.request.check_for",
-		args:{
-			"check_for":check_for,
-			"doc":cur_frm.doc
-		},
-		callback: function(r) {
-			if(r.message){
-				msgprint(r.message);
-				cur_frm.reload_doc()
-			}
-			else if(!r.message && cur_frm.doc.reopend == "Yes"){
-				cur_frm.set_value("editable_value",0)
-				refresh_field('editable_value')
-			}
 		}
 	})
 }

@@ -339,8 +339,8 @@ class Request(Document):
 			frappe.db.set_value("Request",self.name,"allocated_to","Executor")
 			self.current_status = "Additional Approver Required More Information"
 			frappe.db.set_value("Request",self.name,"current_status","Additional Approver Required More Information")
-			self.editable_value = 4
-			frappe.db.set_value("Request",self.name,"editable_value",4)	
+			self.editable_value = 5
+			frappe.db.set_value("Request",self.name,"editable_value",5)	
 			comment = """ asked for More information from Executor""".format(user=frappe.session.user)
 			self.add_comment(comment)
 		
