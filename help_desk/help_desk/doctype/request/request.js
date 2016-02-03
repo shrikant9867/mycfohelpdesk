@@ -28,7 +28,6 @@ frappe.ui.form.on("Request","on_the_behalf_of",function(frm){
 		return frappe.call({
 			method: "help_desk.help_desk.doctype.request.request.get_user_details",
 			callback: function(r) {
-				console.log(r.message)
 				cur_frm.doc.requester_name = r.message.requester_name
 				cur_frm.doc.requester_email_id = r.message.email
 				cur_frm.doc.requester_contact_number = r.message.cell_number
@@ -82,7 +81,7 @@ frappe.ui.form.on("Request", "refresh",function(frm){
 
 				if(r.message.Existing_user == "Executor"){
 					/*if((cur_frm.doc.executor_status == "Resolved" || cur_frm.doc.reopend == "Yes")&&(cur_frm.doc.editable_value == 0 || cur_frm.doc.editable_value == 3 || cur_frm.doc.editable_value == 4)){*/
-					if((cur_frm.doc.executor_status == "Resolved" || cur_frm.doc.reopend == "Yes")&&(cur_frm.doc.editable_value != 1 || cur_frm.doc.editable_value != 2)){
+					if((cur_frm.doc.executor_status == "Resolved" || cur_frm.doc.reopend == "Yes")&&(cur_frm.doc.editable_value != 1 && cur_frm.doc.editable_value != 2)){
 						cd_fields = ['executor_status','priority','request_category']
 						make_fields_read_only(cd_fields)
 					}
@@ -280,7 +279,7 @@ cur_frm.fields_dict['additional_approver'].get_query = function(doc, cdt, cdn) {
 }
 
 
-cur_frm.fields_dict['employee'].get_query = function(doc, cdt, cdn) {
+cur_frm.fields_dict['employee'].get_query = function(doc) {
 	if (cur_frm.doc.on_the_behalf_of == "Others"){
 		return {
 			query: "help_desk.help_desk.doctype.request.request.filter_employee"
@@ -288,11 +287,30 @@ cur_frm.fields_dict['employee'].get_query = function(doc, cdt, cdn) {
 	}
 }
 
-cur_frm.cscript.refresh = function(doc, cdt, cdn) {
+/*cur_frm.cscript.refresh = function(doc, cdt, cdn) {
 	if(doc.docstatus == 0){
     	if(doc.request_status == "Close"){
        		cur_frm.add_custom_button(__("Re Open"),reopen_request)
  		}
+	}
+}*/
+
+frappe.ui.form.on("Request","request_status",function(frm){
+	if(cur_frm.doc.request_status == "Close"){
+		cur_frm.set_df_property("request_status","read_only",1)
+		cur_frm.save();
+	}	
+})
+
+cur_frm.cscript.refresh = function(frm) {
+	if(cur_frm.perm[0].write){
+    	if(cur_frm.doc.request_status == "Close"){
+    		cur_frm.set_df_property("request_status","read_only",1)
+       		cur_frm.add_custom_button("Re open", function() {
+				reopen_request(frm);
+				cur_frm.save();
+ 			});
+ 		}	
 	}
 }	
 
