@@ -58,6 +58,7 @@ frappe.ui.form.on("Request", "refresh",function(frm){
     }
 	return frappe.call({
 		method: "help_desk.help_desk.doctype.request.request.status_permission",
+		/*doc:cur_frm.doc,*/
 		args: {
 			"doc":cur_frm.doc
 		},
@@ -128,7 +129,7 @@ make_fields_editable = function(cd_fields){
 
 frappe.ui.form.on("Request",{
 	p_id:function(frm){
-			this.validate_pc_exists(frm)
+		this.validate_pc_exists(frm)
 		},
 	priority:function(frm){
 		this.set_due_date(frm)

@@ -363,6 +363,7 @@ class Request(Document):
 
 
 	def get_executer_list(self):
+		print "in self get_executer_list"
 		if(self.approver):
 			approver = frappe.get_doc("Employee",self.approver)
 			list0 = [self.requester_email_id,approver.user_id]
@@ -370,11 +371,12 @@ class Request(Document):
 			sreq = frappe.get_doc("Sub Request Category",self.sub_request_category)
 			user_list = frappe.db.sql("""select t1.email from `tabUser` t1,`tabUserRole` t2 
 				where t1.name = t2.parent and t2.role = '{0}' and t1.email not in {1} """.format(sreq.executer,list1),as_list =1)
-		 	if(user_list == []):
-	 			frappe.throw(_("For This Sub Reueqst Category No One have role of {0} As Executor ,Please Give Any User To The Role Of {0}")
-				.format(sreq.executer))
+		 	# if(user_list == []):
+	 		# 	frappe.throw(_("For This Sub Reueqst Category No One have role of {0} As Executor ,Please Give Any User To The Role Of {0}")
+				# .format(sreq.executer))
 		 	chain = itertools.chain(*user_list)
-		 	return list(chain)
+		 	list_users = list(chain)
+		 	return list_users
 		else:
 			list0 = [x.encode('UTF8') for x in [self.requester_email_id] if x]
 			list1 = list0[0]
@@ -382,11 +384,12 @@ class Request(Document):
 			user_list = frappe.db.sql("""select t1.email from `tabUser` t1,`tabUserRole` t2 
 			where t1.name = t2.parent and t2.role = '{0}' and t1.email <> '{1}' """.format(sreq.executer,list1),as_list =1)
 	 		print user_list
-	 		if(user_list == []):
-	 			frappe.throw(_("For This Sub Reueqst Category No One have role of {0} As Executor ,Please Give Any User To The Role Of {0}")
-				.format(sreq.executer))
+	 		# if(user_list == []):
+	 		# 	frappe.throw(_("For This Sub Reueqst Category No One have role of {0} As Executor ,Please Give Any User To The Role Of {0}")
+				# .format(sreq.executer))
 	 		chain = itertools.chain(*user_list)
-	 		return list(chain)
+	 		list_users = list(chain)
+	 		return list_users
 		
 
 	def get_executer_names(self):
@@ -427,6 +430,31 @@ class Request(Document):
 			self.current_status = "Request Closed"
 			frappe.db.set_value("Request",self.name,"current_status","Request Closed")
 
+	# def status_permission(self):
+	# 	print "in status_permission"
+	# 	emp_user=''
+	# 	executor=''
+	# 	if self.approver:
+	# 		emp_user = frappe.db.get_value("Employee",self.approver,"user_id")
+		
+	# 	if frappe.session.user == emp_user:
+	# 		return {'valid':'true','Existing_user':'Approver'}	
+		
+	# 	if self.sub_request_category:
+	# 		executor = self.get_executer_list()
+		
+	# 	if frappe.session.user in executor:
+	# 		return {'valid':'true','Existing_user':'Executor'}
+		
+	# 	elif frappe.session.user == self.additional_approver:
+	# 		return {'valid':'true','Existing_user':'Ad_Approver'}
+		
+	# 	elif frappe.session.user:
+	# 		return {'valid': 'true','Existing_user': 'Requester'}		
+		
+	# 	else:
+	# 		return {'valid':'false'}		
+
 @frappe.whitelist()
 def get_user_details():
 	current_user = frappe.get_doc("User",frappe.session.user)
@@ -449,6 +477,7 @@ def get_due_date(doc):
 	return due_date_with_holiday.strftime("%Y-%m-%d")
 
 def get_executer_list(doc):
+	print "whitelist get_executer_list"
 	emp_user=''
 	doc['approver'] = ''
 	if doc['approver']:
@@ -470,20 +499,20 @@ def get_executer_list(doc):
  		list_users = list(chain)
  		return list_users
 	
-@frappe.whitelist()	
-def check_for(check_for,doc):
-	current_doc = json.loads(doc)
-	current_user = frappe.session.user
-	if check_for == 'Approver' and current_doc.get('approver'):
-		emp_user = frappe.db.get_value("Employee",current_doc.get('approver'),"user_id")
-	if check_for == 'Requester' and current_doc.get('requester_email_id') != current_user:
-		return "Not Allowed Only Requester Can edit these fields"
-	if check_for == 'Approver' and emp_user != current_user:
-		return "Not Allowed only approver can edit these fields"	 
-	if check_for == 'Executor' and current_user not in get_executer_list(current_doc):
-		return "Not Allowed only executor can edit these fields"
-	if check_for == 'Additional Approver' and current_doc.get('additional_approver') != current_user:
-		return "Not Allowed only additional_approver can edit these fields"
+# @frappe.whitelist()	
+# def check_for(check_for,doc):
+# 	current_doc = json.loads(doc)
+# 	current_user = frappe.session.user
+# 	if check_for == 'Approver' and current_doc.get('approver'):
+# 		emp_user = frappe.db.get_value("Employee",current_doc.get('approver'),"user_id")
+# 	if check_for == 'Requester' and current_doc.get('requester_email_id') != current_user:
+# 		return "Not Allowed Only Requester Can edit these fields"
+# 	if check_for == 'Approver' and emp_user != current_user:
+# 		return "Not Allowed only approver can edit these fields"	 
+# 	if check_for == 'Executor' and current_user not in get_executer_list(current_doc):
+# 		return "Not Allowed only executor can edit these fields"
+# 	if check_for == 'Additional Approver' and current_doc.get('additional_approver') != current_user:
+# 		return "Not Allowed only additional_approver can edit these fields"
 
 	 
 
@@ -508,6 +537,7 @@ def get_approver_list(doctype, txt, searchfield, start, page_len, filters):
 
 @frappe.whitelist()
 def status_permission(doc):
+	print "whitelist status_permission"
 	current_doc = json.loads(doc)
 	emp_user=''
 	executor=''
