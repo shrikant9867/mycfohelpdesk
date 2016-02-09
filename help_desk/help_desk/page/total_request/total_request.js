@@ -18,6 +18,11 @@ report.totalRequestGenerated = Class.extend({
 		var me = this;
 		this.report = $('<div class="graphical-report"></div>').appendTo(this.page.main);
 
+		$.getScript("https://www.gstatic.com/charts/loader.js", function(){
+			google.charts.load("current", {packages:['corechart']});
+			google.charts.setOnLoadCallback(me.draw_chart);
+		});
+
 		this.refresh();
 	},
 	make_filters: function(wrapper){
@@ -70,7 +75,8 @@ report.totalRequestGenerated = Class.extend({
 			callback: function(r){
 				if(r.message.requests && r.message.requests.length > 0){
 					me.requests = r.message.requests;
-					me.render_stacked_column_chart();
+					// me.render_stacked_column_chart();
+					me.draw_chart();
 				}
 				else
 					frappe.msgprint("Requests not found for the selected filters")
@@ -125,5 +131,25 @@ report.totalRequestGenerated = Class.extend({
 				chart.draw(view, options_fullStacked);
 			});
 		});
+	},
+	draw_chart: function(){
+		var me = this;
+		if(!me.requests && me.requests.length == 0)
+			return
+
+		var data = google.visualization.arrayToDataTable(me.requests);
+		var view = new google.visualization.DataView(data);
+
+		var options_fullStacked = {
+			isStacked: 'percent',
+			height: 400,
+			legend: {position: 'top', maxLines: 3},
+			vAxis: {
+				minValue: 0,
+				ticks: [0, .2, .4, .6, .8, 1]
+			}
+		};
+		var chart = new google.visualization.ColumnChart($(".graphical-report")[0]);
+		chart.draw(view, options_fullStacked);
 	}
 });
