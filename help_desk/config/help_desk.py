@@ -51,7 +51,14 @@ def get_data():
 					"name": "Helpdesk",
 					"description": _("Request Report"),
 					"doctype": "Request",
-				}
+				},
+				{
+					"type": "page",
+					"name": "total-request",
+					"icon": "icon-sitemap",
+					"label": _("Total Request Generated"),
+					"description": _("Stacked Column Chart For Total Request Generated."),
+				},
 			]
 		}
-	]		
+	]
