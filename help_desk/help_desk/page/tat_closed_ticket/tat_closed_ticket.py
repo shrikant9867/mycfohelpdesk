@@ -19,7 +19,7 @@ def get_tat_for_closed_ticket(start, end):
 
 	results = frappe.get_all("Request", fields=fields, filters=filters)
 
-	return { "requests": prepare_data(results) }
+	return prepare_data(results)
 
 def get_leagend(start, end):
 	time_diff = time_diff_in_hours(end, start)
@@ -46,7 +46,8 @@ def prepare_data(results):
 	data = []
 	requests = {}
 	
-	within_days = 0
+	total_tickets = 0
+	within_day = 0
 	two_three_days = 0
 	three_five_days = 0
 	five_seven_days = 0
@@ -66,7 +67,7 @@ def prepare_data(results):
 
 		total_tickets += count
 		if closed_in == "Winthin 1 day":
-			within_days += count
+			within_day += count
 		elif closed_in == "2-3 days":
 			two_three_days += count
 		elif closed_in == "3-5 days":
@@ -77,9 +78,33 @@ def prepare_data(results):
 			more_than_seven += count
 
 	data = [["Genre", "Winthin 1 day", "2-3 days", "3-5 days", "5-7 days", "more than 7 days", { "role": "annotation" }]]
-	chart_data = [[key, request.get("Open") or 0, request.get("Pending") or 0, request.get("Close") or 0, ""] \
-		for key, request in requests.iteritems()]
+	chart_data = [[key, request.get("Winthin 1 day") or 0, request.get("2-3 days") or 0, request.get("3-5 days") or 0, \
+		request.get("5-7 days") or 0, request.get("more than 7 days") or 0, ""] for key, request in requests.iteritems()]
 	data.extend(chart_data)
-	data.append(["Total Closed", within_day, two_three_days, three_five_days, five_seven_days, more_than_seven, ""])
+	data.append(["Total", within_day, two_three_days, three_five_days, five_seven_days, more_than_seven, ""])
 
-	return data
+	# cols = requests.keys() or []
+	# cols.append("Total")
+
+	# table_data = {
+	# 	"totals_table": {
+	# 		"Winthin 1 day": within_day,
+	# 		"2-3 days": two_three_days,
+	# 		"3-5 days": three_five_days,
+	# 		"5-7 days": five_seven_days,
+	# 		"more than 7 days": more_than_seven
+	# 	},
+	# 	"rows": ["Winthin 1 day", "2-3 days", "3-5 days", "5-7 days", "more than 7 days"],
+	# 	"cols": cols
+	# }
+	# table_data.update(requests)
+
+	# return {
+	# 	"requests": data,
+	# 	"legends_table": table_data,
+	# }
+
+	return {
+		"requests": data,
+		"table": list(zip(*data)),
+	}

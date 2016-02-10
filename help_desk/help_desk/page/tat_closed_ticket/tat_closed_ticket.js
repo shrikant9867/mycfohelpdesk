@@ -17,7 +17,8 @@ report.tatForClosedTicket = Class.extend({
 		this.bind_filters()
 		
 		var me = this;
-		this.report = $('<div class="graphical-report"></div>').appendTo(this.page.main);
+		this.report = $('<div class="graphical-report"><div id="report"></div><div id="table">\
+			</div></div>').appendTo(this.page.main);
 
 		$.getScript("https://www.gstatic.com/charts/loader.js", function(){
 			google.charts.load("current", {packages:['corechart']});
@@ -76,7 +77,9 @@ report.tatForClosedTicket = Class.extend({
 			callback: function(r){
 				if(r.message.requests && r.message.requests.length > 0){
 					me.requests = r.message.requests;
+					me.legends_table = r.message.legends_table;
 					me.draw_chart();
+					$("#table").html(frappe.render_template("graphical_table", r.message));
 				}
 				else
 					frappe.msgprint("Requests not found for the selected filters")
@@ -125,7 +128,7 @@ report.tatForClosedTicket = Class.extend({
 						ticks: [0, .2, .4, .6, .8, 1]
 					}
 				};
-				var chart = new google.visualization.ColumnChart($(".graphical-report")[0]);
+				var chart = new google.visualization.ColumnChart($("#report")[0]);
 				chart.draw(view, options_fullStacked);
 			});
 		});

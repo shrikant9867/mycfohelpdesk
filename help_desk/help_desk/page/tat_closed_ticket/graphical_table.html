@@ -1,0 +1,20 @@
+<div class="table-responsive">
+	<table class="table table-bordered" width="100%">
+		<thead>
+			<tr>
+				<th></th>
+				{% for(var i=1, l=table[0].length + 1; i < l; i++) { %}
+					<th>table[0][i]</th>
+				{% } %}
+			</tr>
+		</thead>	
+		<tbody>
+			{% for(var i=1, l=table.length - 1; i < l; i++) { %}
+				<tr>
+					{% for(var j=0, m=table[i].length; j < m; j++) { %}
+					<td>table[i][j]</td>
+				</tr>
+			{% } %}
+		</tbody>
+	</table>
+</div>
