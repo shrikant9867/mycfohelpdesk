@@ -54,6 +54,13 @@ def get_data():
 				},
 				{
 					"type": "page",
+					"name": "tat-closed-ticket",
+					"icon": "icon-sitemap",
+					"label": _("TAT for Closed Ticket"),
+					"description": _("Stacked Column Chart For TAT Closed Request."),
+				},
+				{
+					"type": "page",
 					"name": "total-request",
 					"icon": "icon-sitemap",
 					"label": _("Total Request Generated"),
