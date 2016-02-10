@@ -1,0 +1,21 @@
+{
+ "content": null, 
+ "creation": "2016-02-10 11:08:28.289624", 
+ "docstatus": 0, 
+ "doctype": "Page", 
+ "modified": "2016-02-10 11:08:28.289624", 
+ "modified_by": "Administrator", 
+ "module": "Help Desk", 
+ "name": "tat-closed-ticket", 
+ "owner": "Administrator", 
+ "page_name": "tat-closed-ticket", 
+ "roles": [
+  {
+   "role": "All"
+  }
+ ], 
+ "script": null, 
+ "standard": "Yes", 
+ "style": null, 
+ "title": "TAT for Closed Ticket"
+}

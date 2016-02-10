@@ -1,16 +1,17 @@
+
 frappe.provide('report.totalRequestGenerated')
 
-frappe.pages['total-request'].on_page_load = function(wrapper) {
+frappe.pages['tat-closed-ticket'].on_page_load = function(wrapper) {
 	var page = frappe.ui.make_app_page({
 		parent: wrapper,
-		title: 'Total Request Generated',
+		title: 'TAT for Closed Ticket',
 		single_column: true
 	});
 
-	new report.totalRequestGenerated(wrapper, page)
+	new report.tatForClosedTicket(wrapper, page)
 }
 
-report.totalRequestGenerated = Class.extend({
+report.tatForClosedTicket = Class.extend({
 	init: function(wrapper, page) {
 		this.make_filters(wrapper)
 		this.bind_filters()
@@ -66,7 +67,7 @@ report.totalRequestGenerated = Class.extend({
 		var me = this;
 
 		return frappe.call({
-			method: "help_desk.help_desk.page.total_request.total_request.get_total_request_generated",
+			method: "help_desk.help_desk.page.tat_closed_ticket.tat_closed_ticket.get_tat_for_closed_ticket",
 			type: "GET",
 			args: {
 				start: this.page.fields_dict.start.get_parsed_value(),
