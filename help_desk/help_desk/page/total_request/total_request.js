@@ -18,12 +18,12 @@ report.totalRequestGenerated = Class.extend({
 		var me = this;
 		this.report = $('<div class="graphical-report"></div>').appendTo(this.page.main);
 
-		$.getScript("https://www.gstatic.com/charts/loader.js", function(){
-			google.charts.load("current", {packages:['corechart']});
-			google.charts.setOnLoadCallback(function(){
+		if(frappe.google_charts_loaded)
+			me.refresh();
+		else
+			window.setTimeout(function(){
 				me.refresh();
-			});
-		});
+			}, 1000);
 	},
 	make_filters: function(wrapper){
 		var me = this;
@@ -78,7 +78,7 @@ report.totalRequestGenerated = Class.extend({
 					$('<div id="report"></div><div id="table"></div>').appendTo(".graphical-report");
 					me.requests = r.message.requests;
 					me.draw_chart();
-					$("#table").html(frappe.render_template("graphical_table", { "table": r.message.table}));
+					me.report.find("#table").html(frappe.render_template("graphical_table", { "table": r.message.table}));
 				}
 				else{
 					$(".graphical-report").empty()
@@ -151,7 +151,7 @@ report.totalRequestGenerated = Class.extend({
 				ticks: [0, .2, .4, .6, .8, 1]
 			}
 		};
-		var chart = new google.visualization.ColumnChart($("#report")[0]);
+		var chart = new google.visualization.ColumnChart(me.report.find("#report")[0]);
 		chart.draw(view, options_fullStacked);
 	}
 });
