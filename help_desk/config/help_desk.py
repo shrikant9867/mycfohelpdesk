@@ -51,7 +51,28 @@ def get_data():
 					"name": "Helpdesk",
 					"description": _("Request Report"),
 					"doctype": "Request",
-				}
+				},
+				{
+					"type": "page",
+					"name": "graphical-reports",
+					"icon": "icon-sitemap",
+					"label": _("Graphical Reports"),
+					"description": _("Graphical Report for Request and IP Library"),
+				},
+				{
+					"type": "page",
+					"name": "tat-closed-ticket",
+					"icon": "icon-sitemap",
+					"label": _("TAT for Closed Ticket"),
+					"description": _("Stacked Column Chart For TAT Closed Request."),
+				},
+				{
+					"type": "page",
+					"name": "total-request",
+					"icon": "icon-sitemap",
+					"label": _("Total Request Generated"),
+					"description": _("Stacked Column Chart For Total Request Generated."),
+				},
 			]
 		}
-	]		
+	]

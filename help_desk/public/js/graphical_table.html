@@ -1,0 +1,24 @@
+<div class="table-responsive" style="margin: 0px 50px 0px 50px;">
+	<table class="table table-bordered">
+		<thead>
+			<tr>
+				<th></th>
+				{% for(var i=1, l=table[0].length; i < l; i++) { %} 
+					<td align="center"><b>{{ table[0][i] }}</b></td>
+				{% } %} 
+			</tr>
+		</thead>
+		<tbody>
+			{% for(var i=1, l=table.length - 1; i < l; i++) { %} 
+				<tr>
+				{% for(var j=0, m=table[i].length; j < m; j++) { %}
+					{% if( j==0 ) %} 
+						<td align="right">{{ table[i][j] }}</td>
+					{% else %} 
+						<td align="center">{{ table[i][j] }}</td>
+				{% } %} 
+				</tr>
+			{% } %} 
+		</tbody>
+	</table>
+</div>
