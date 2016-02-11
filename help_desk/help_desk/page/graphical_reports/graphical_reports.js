@@ -6,17 +6,22 @@ frappe.pages['graphical-reports'].on_page_load = function(wrapper) {
 		title: 'Graphical Reports',
 		single_column: false
 	});
-
 	new report.graphicalReports(wrapper, page)
 }
 
 report.graphicalReports = Class.extend({
 	init: function(wrapper, page) {
+		var me = this;
+		
 		this.make_sidebar(page);
 		this.make_filters(wrapper);
 		this.bind_filters();
-		
-		var me = this;
+
+		this.title_mapper = {
+			"tat-closed-tickets": "TAT For Closed Tickets",
+			"total-request-generated": "Total Request Generated"
+		}
+
 		this.report = $('<div class="graphical-report"></div>').appendTo(this.page.main);
 
 		if(frappe.google_charts_loaded)
@@ -30,7 +35,11 @@ report.graphicalReports = Class.extend({
 		var me = this;
 		page.sidebar.html(frappe.render_template("report_sidebar", { data: this.get_list_of_reports()}));
 		page.sidebar.on("click", ".module-sidebar-item", function(e){
-			me.refresh($(this).attr("report-name"));
+			report = $(this).attr("report-name")
+			subtitle = me.title_mapper[report]? " - " + me.title_mapper[report] : ""
+			title = "Graphical Reports"+ subtitle
+			$(".page-title > h1 > .title-text").html(title)
+			me.refresh();
 		})
 	},
 	get_list_of_reports: function(){
