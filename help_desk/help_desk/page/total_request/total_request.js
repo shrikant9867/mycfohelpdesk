@@ -16,8 +16,7 @@ report.totalRequestGenerated = Class.extend({
 		this.bind_filters()
 		
 		var me = this;
-		this.report = $('<div class="graphical-report"><div id="report"></div><div id="table">\
-			</div></div>').appendTo(this.page.main);
+		this.report = $('<div class="graphical-report"></div>').appendTo(this.page.main);
 
 		$.getScript("https://www.gstatic.com/charts/loader.js", function(){
 			google.charts.load("current", {packages:['corechart']});
@@ -75,13 +74,18 @@ report.totalRequestGenerated = Class.extend({
 			},
 			callback: function(r){
 				if(r.message && r.message.requests && r.message.requests.length > 0){
+					$(".graphical-report").empty()
+					$('<div id="report"></div><div id="table"></div>').appendTo(".graphical-report");
 					me.requests = r.message.requests;
 					me.draw_chart();
 					$("#table").html(frappe.render_template("graphical_table", { "table": r.message.table}));
 				}
-				else
-					$(".graphical-report").html('<div class="msg-box" style="width: 63%; margin: 30px auto;"> \
-						<p class="text-center">Requests not found for the selected filters</p></div>')
+				else{
+					$(".graphical-report").empty()
+					$('<div class="msg-box" style="width: 63%; margin: 30px auto;"> \
+						<p class="text-center">Requests not found for the selected \
+						filters</p></div>').appendTo(".graphical-report");
+				}
 			}
 		});
 	},
