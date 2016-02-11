@@ -54,6 +54,13 @@ def get_data():
 				},
 				{
 					"type": "page",
+					"name": "graphical-reports",
+					"icon": "icon-sitemap",
+					"label": _("Graphical Reports"),
+					"description": _("Graphical Report for Request and IP Library"),
+				},
+				{
+					"type": "page",
 					"name": "tat-closed-ticket",
 					"icon": "icon-sitemap",
 					"label": _("TAT for Closed Ticket"),
