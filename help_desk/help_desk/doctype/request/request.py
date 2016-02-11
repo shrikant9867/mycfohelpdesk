@@ -518,12 +518,21 @@ def get_executer_list(doc):
 
 def get_approver_list(doctype, txt, searchfield, start, page_len, filters):
 	op_and_project = frappe.db.sql("""select name from `tabOperation And Project Commercial`
-		where project_commercial = %s""",(filters.get("project_id")),as_list =1)
+		where customer = %s""",(filters.get("customer")),as_list =1)
 	new_op_and_project = [op[0] for op in op_and_project if op]
 	new = ','.join('"{0}"'.format(w) for w in new_op_and_project)
-	approver = frappe.db.sql("""select name,employee_name from `tabEmployee` where name in
-					( select Distinct user_name from `tabOperation And Project Details`t1
-					where t1.parent in ({0})) and user_id <> %s """.format(new),filters['doc']['requester_email_id'],as_list=1)
+	approver = frappe.db.sql("""select name,employee_name from 
+									`tabEmployee` where name in
+										( select distinct user_name from 
+											`tabOperation And Project Details`t1
+												where t1.parent in ({op_and_project}) ) 
+									and user_id != '{requester}' 
+									and (name like '{txt}'
+											or employee_name like '{txt}' )
+									limit 20						
+									""".format(op_and_project= new, requester= filters['doc']['requester_email_id'],
+											txt= "%%%s%%" % txt ),as_list=1)
+									# .format(new),filters['doc']['requester_email_id'],as_list=1)
 	# approver = frappe.db.sql("""select name,employee_name from `tabEmployee` where name in
 	# 				( select Distinct user_name from `tabOperation And Project Details`t1
 	# 				where t1.parent in ({0}) and t1.role = "EL" or t1.role = "EM") """.format(new),as_list=1)
@@ -537,7 +546,6 @@ def get_approver_list(doctype, txt, searchfield, start, page_len, filters):
 
 @frappe.whitelist()
 def status_permission(doc):
-	print "whitelist status_permission"
 	current_doc = json.loads(doc)
 	emp_user=''
 	executor=''
@@ -565,7 +573,8 @@ def status_permission(doc):
 def check_pc_exists(doc):
 	doc = json.loads(doc)
 	op_and_project = frappe.db.sql("""select name from `tabOperation And Project Commercial`
-		where project_commercial = %s""",(doc.get("p_id")),as_list =1)
+		where customer = %s""",(doc.get("customer")),as_list =1)
+	print op_and_project
 	if op_and_project:
 		return True
 	else:
