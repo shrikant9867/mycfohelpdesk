@@ -16,14 +16,15 @@ report.totalRequestGenerated = Class.extend({
 		this.bind_filters()
 		
 		var me = this;
-		this.report = $('<div class="graphical-report"></div>').appendTo(this.page.main);
+		this.report = $('<div class="graphical-report"><div id="report"></div><div id="table">\
+			</div></div>').appendTo(this.page.main);
 
 		$.getScript("https://www.gstatic.com/charts/loader.js", function(){
 			google.charts.load("current", {packages:['corechart']});
-			google.charts.setOnLoadCallback(me.draw_chart);
+			google.charts.setOnLoadCallback(function(){
+				me.refresh();
+			});
 		});
-
-		this.refresh();
 	},
 	make_filters: function(wrapper){
 		var me = this;
@@ -73,14 +74,14 @@ report.totalRequestGenerated = Class.extend({
 				end: this.page.fields_dict.end.get_parsed_value(),
 			},
 			callback: function(r){
-				if(r.message.requests && r.message.requests.length > 0){
+				if(r.message && r.message.requests && r.message.requests.length > 0){
 					me.requests = r.message.requests;
 					me.draw_chart();
+					$("#table").html(frappe.render_template("graphical_table", { "table": r.message.table}));
 				}
 				else
-					frappe.msgprint("Requests not found for the selected filters")
-
-				delete r.message["requests"]
+					$(".graphical-report").html('<div class="msg-box" style="width: 63%; margin: 30px auto;"> \
+						<p class="text-center">Requests not found for the selected filters</p></div>')
 			}
 		});
 	},
@@ -124,7 +125,7 @@ report.totalRequestGenerated = Class.extend({
 						ticks: [0, .2, .4, .6, .8, 1]
 					}
 				};
-				var chart = new google.visualization.ColumnChart($(".graphical-report")[0]);
+				var chart = new google.visualization.ColumnChart($("#report")[0]);
 				chart.draw(view, options_fullStacked);
 			});
 		});
@@ -146,7 +147,7 @@ report.totalRequestGenerated = Class.extend({
 				ticks: [0, .2, .4, .6, .8, 1]
 			}
 		};
-		var chart = new google.visualization.ColumnChart($(".graphical-report")[0]);
+		var chart = new google.visualization.ColumnChart($("#report")[0]);
 		chart.draw(view, options_fullStacked);
 	}
 });

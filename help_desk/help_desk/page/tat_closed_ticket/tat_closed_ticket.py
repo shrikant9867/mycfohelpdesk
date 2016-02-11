@@ -83,27 +83,6 @@ def prepare_data(results):
 	data.extend(chart_data)
 	data.append(["Total", within_day, two_three_days, three_five_days, five_seven_days, more_than_seven, ""])
 
-	# cols = requests.keys() or []
-	# cols.append("Total")
-
-	# table_data = {
-	# 	"totals_table": {
-	# 		"Winthin 1 day": within_day,
-	# 		"2-3 days": two_three_days,
-	# 		"3-5 days": three_five_days,
-	# 		"5-7 days": five_seven_days,
-	# 		"more than 7 days": more_than_seven
-	# 	},
-	# 	"rows": ["Winthin 1 day", "2-3 days", "3-5 days", "5-7 days", "more than 7 days"],
-	# 	"cols": cols
-	# }
-	# table_data.update(requests)
-
-	# return {
-	# 	"requests": data,
-	# 	"legends_table": table_data,
-	# }
-
 	return {
 		"requests": data,
 		"table": list(zip(*data)),
