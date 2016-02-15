@@ -7,7 +7,7 @@ def get_pending_file_for_approval(start, end):
 		"count(name) as count"
 	]
 
-	filters = [["IP Approver", "current status", "IN", ["Open", "Approved by Approver", "Rejected by Approver"]]]
+	filters = [["IP Approver", "current_status", "in", ["Open", "Approved by Approver", "Rejected by Approver"]]]
 
 	try:
 		results = frappe.get_all("IP Approver", fields=fields, filters=filters, group_by="industry, file_type")
