@@ -128,9 +128,12 @@ make_fields_editable = function(cd_fields){
 }
 
 frappe.ui.form.on("Request",{
-	p_id:function(frm){
+	customer:function(frm){
 		this.validate_pc_exists(frm)
 		},
+/*	p_id:function(frm){
+		this.validate_pc_exists(frm)
+		},*/
 	priority:function(frm){
 		this.set_due_date(frm)
 	}	
@@ -143,6 +146,7 @@ validate_pc_exists = function(frm){
 			"doc":cur_frm.doc
 		},
 		callback: function(r) {
+			console.log(r.message)
 			if (r.message){
 				approval_required = true
 			}			
@@ -166,11 +170,13 @@ set_due_date = function(frm){
 }
 
 cur_frm.fields_dict['approver'].get_query = function(doc, cdt, cdn) {
-	if (approval_required){
+	if (approval_required = true){
+		console.log("in if")
 		return {
 			query: "help_desk.help_desk.doctype.request.request.get_approver_list",
 			filters: {
-				'project_id': doc.p_id,
+				/*'project_id': doc.p_id,*/
+				'customer': doc.customer,
 				'doc' : cur_frm.doc
 			}
 		}
