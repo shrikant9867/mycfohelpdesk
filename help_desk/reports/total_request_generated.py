@@ -15,16 +15,15 @@ def prepare_data(results):
 
 	data = []
 	requests = {}
-	
+	total_tickets = 0
 	total_open = 0
 	total_closed = 0
 	total_pending = 0
-	total_tickets = 0
 
 	for record in results:
-		dept = record.get("department_abbriviation")
-		count = int(record.get("count"))
 		status = record.get("request_status")
+		count = int(record.get("count"))
+		dept = record.get("department_abbriviation")
 
 		if requests.get(dept):
 			requests.get(dept).update({ status:count })
@@ -38,7 +37,7 @@ def prepare_data(results):
 			total_closed += count
 		else:
 			total_pending += count
-
+	frappe.errprint(results)
 	data = [["Genre", "Open", "Pending", "Closed", { "role": "annotation" }]]
 	chart_data = [[key, request.get("Open") or 0, request.get("Pending") or 0, request.get("Close") or 0, ""] \
 		for key, request in requests.iteritems()]
