@@ -1,2 +1,6 @@
 from tat_closed_ticket import get_tat_for_closed_ticket
 from total_request_generated import get_total_request_generated
+from db_count_industry_document import get_db_count_for_industry_document
+from pending_for_approval import get_pending_file_for_approval
+from upload_trends import get_upload_trends, get_user_wise_upload_trends
+from download_trends import get_download_trends, get_user_wise_download_trends

@@ -1,7 +1,7 @@
 <ul class="module-sidebar-nav nav nav-pills nav-stacked">
 	<li class="divider"></li>
     {% for (var i=0, l= data.data.length; i < l; i++) { var item = data.data[i]; %}
-    <li data-label="{%= item.label %}" report-name="{%= item.id %}" class="strong module-sidebar-item active" style="margin-bottom:10px">
+    <li data-label="{%= item.label %}" report-name="{%= item.id %}" class="strong module-sidebar-item" style="margin-bottom:5px">
       <a class="module-link">
         <i class="icon icon-chevron-right pull-right" style="display: none;"></i>
         <span>{%= item.label %}</span>

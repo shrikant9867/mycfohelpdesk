@@ -16,11 +16,22 @@ report.graphicalReports = Class.extend({
 		this.make_sidebar(page);
 		this.make_filters(wrapper);
 		this.bind_filters();
+		this.rpt_name = "tat-closed-tickets"				//default report
 
 		this.title_mapper = {
 			"tat-closed-tickets": "TAT For Closed Tickets",
-			"total-request-generated": "Total Request Generated"
+			"total-request-generated": "Total Request Generated",
+			"industry-document-type": "Database Count Industry & Document Type",
+			"pending-files-industry": "Industry Wise Pending Files For Approval",
+			"upload-trends": "Upload Trends",
+			"download-trends": "Download Trends",
+			"user-upload-trend": "User Wise Upload Trends",
+			"user-download-trend": "User Wise Upload Trends"
 		}
+
+		this.stacked_percent_chart = ["TAT For Closed Tickets", "Total Request Generated"];
+		this.stacked_chart = ["Database Count Industry & Document Type", "Industry Wise Pending Files For Approval"];
+		this.line_chart = ["Upload Trends", "Download Trends", "User Wise Upload Trends", "User Wise Upload Trends"]
 
 		this.report = $('<div class="graphical-report"></div>').appendTo(this.page.main);
 
@@ -35,16 +46,21 @@ report.graphicalReports = Class.extend({
 		var me = this;
 		page.sidebar.html(frappe.render_template("report_sidebar", { data: this.get_list_of_reports()}));
 		page.sidebar.on("click", ".module-sidebar-item", function(e){
-			report = $(this).attr("report-name")
-			subtitle = me.title_mapper[report]? " - " + me.title_mapper[report] : ""
+			$(".module-sidebar-item").removeClass("active");
+			$(this).addClass("active");
+
+			me.rpt_name = $(this).attr("report-name")
+			subtitle = me.title_mapper[me.rpt_name]? " - " + me.title_mapper[me.rpt_name] : ""
 			title = "Graphical Reports"+ subtitle
+
 			$(".page-title > h1 > .title-text").html(title)
 			me.refresh();
 		})
 	},
 	get_list_of_reports: function(){
 		return {
-			data: [{
+			data: [
+				{
 					"icon": "icon-star",
 					"id": "tat-closed-tickets",
 					"label": "TAT For Closed Tickets"
@@ -53,7 +69,38 @@ report.graphicalReports = Class.extend({
 					"icon": "icon-star",
 					"id": "total-request-generated",
 					"label": "Total Request Generated"
-			}]
+				},
+				{
+					"icon": "icon-star",
+					"id": "industry-document-type",
+					"label": "Database Count Industry & Document Type"
+				},
+				{
+					"icon": "icon-star",
+					"id": "pending-files-industry",
+					"label": "Industry Wise Pending Files For Approval"
+				},
+				{
+					"icon": "icon-star",
+					"id": "upload-trends",
+					"label": "Upload Trends"
+				},
+				{
+					"icon": "icon-star",
+					"id": "download-trends",
+					"label": "Download Trends"
+				},
+				{
+					"icon": "icon-star",
+					"id": "user-upload-trend",
+					"label": "User Wise Upload Trends"
+				},
+				{
+					"icon": "icon-star",
+					"id": "user-download-trend",
+					"label": "User Wise Upload Trends"
+				}
+			]
 		}
 	},
 	make_filters: function(wrapper){
@@ -67,6 +114,11 @@ report.graphicalReports = Class.extend({
 			default:dateutil.add_days(dateutil.get_today(), -30)});
 		this.end = this.page.add_field({fieldtype:"Date", label:"To Date", fieldname:"end", reqd:1,
 			default:dateutil.get_today()});
+		this.toggle_filters()
+	},
+	toggle_filters: function(val){
+		// this.start.$wrapper.readonlyDatepicker(true)
+		// console.log(this.start.$wrapper);
 	},
 	bind_filters:function(){
 		var me = this
@@ -90,12 +142,9 @@ report.graphicalReports = Class.extend({
 			}
 		}
 	},
-	refresh: function(report_name){
+	refresh: function(){
 		var me = this;
 		
-		if(!report_name)
-			report_name = "tat-closed-tickets";
-
 		if(!this.check_mandatory_fields())
 			return
 
@@ -105,7 +154,7 @@ report.graphicalReports = Class.extend({
 			args: {
 				start: this.page.fields_dict.start.get_parsed_value(),
 				end: this.page.fields_dict.end.get_parsed_value(),
-				report: report_name,
+				report: me.rpt_name,
 			},
 			callback: function(r){
 				if(r.message && r.message.requests && r.message.requests.length > 0){
@@ -113,7 +162,8 @@ report.graphicalReports = Class.extend({
 					$('<div id="report"></div><div id="table"></div>').appendTo(".graphical-report");
 					me.requests = r.message.requests;
 					me.draw_chart();
-					me.report.find("#table").html(frappe.render_template("graphical_table", { "table": r.message.table}));
+					if(r.message.table)
+						me.report.find("#table").html(frappe.render_template("graphical_table", { "table": r.message.table}));
 				}
 				else{
 					$(".graphical-report").empty()
@@ -149,18 +199,50 @@ report.graphicalReports = Class.extend({
 			return
 
 		var data = google.visualization.arrayToDataTable(me.requests);
-		var view = new google.visualization.DataView(data);
-
-		var options_fullStacked = {
-			isStacked: 'percent',
-			height: 400,
-			legend: {position: 'top', maxLines: 3},
-			vAxis: {
-				minValue: 0,
-				ticks: [0, .2, .4, .6, .8, 1]
-			}
-		};
 		var chart = new google.visualization.ColumnChart(me.report.find("#report")[0]);
-		chart.draw(view, options_fullStacked);
+
+		if(in_list(me.line_chart, me.title_mapper[me.rpt_name])){
+			var chart = new google.visualization.LineChart(me.report.find("#report")[0]);
+			chart.draw(data, option);
+			$("<br>").appendTo(me.report.find("#report"))
+		}
+		else{
+			var view = new google.visualization.DataView(data);
+			var option = this.get_chart_options()
+			chart.draw(view, option);
+		}
+	},
+	get_chart_options: function(type, is_stacked){
+		var me = this;
+
+		if(in_list(this.stacked_percent_chart, me.title_mapper[me.rpt_name])){
+			return {
+					isStacked: 'percent',
+					height: 400,
+					legend: {position: 'top', maxLines: 3},
+					vAxis: {
+						minValue: 0,
+						ticks: [0, .2, .4, .6, .8, 1]
+					}
+				};
+		}
+		else if(in_list(this.stacked_chart, me.title_mapper[me.rpt_name])){
+			return {
+					isStacked: 'percent',
+					height: 400,
+					legend: {position: 'top', maxLines: 3},
+					vAxis: {
+						minValue: 0,
+						ticks: [0, .2, .4, .6, .8, 1]
+					}
+				};
+		}
+		else if(in_list(this.line_chart, me.title_mapper[me.rpt_name])){
+			return {
+				title: me.title_mapper[me.rpt_name] || "",
+				curveType: 'function',
+				legend: { position: 'bottom' }
+			};
+		}
 	}
 });
