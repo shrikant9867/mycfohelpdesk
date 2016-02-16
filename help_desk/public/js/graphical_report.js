@@ -1,37 +1,19 @@
-frappe.provide('report.graphicalReports')
-
-frappe.pages['graphical-reports'].on_page_load = function(wrapper) {
-	var page = frappe.ui.make_app_page({
-		parent: wrapper,
-		title: 'Graphical Reports',
-		single_column: false
-	});
-	new report.graphicalReports(wrapper, page)
-}
+frappe.provide('report')
 
 report.graphicalReports = Class.extend({
-	init: function(wrapper, page) {
+	init: function(wrapper, page, opts) {
 		var me = this;
+
+		this.rpt_name = opts["default_rpt"];
+		this.title_mapper = opts["title_mapper"];
+		this.stacked_percent_chart = opts["stacked_percent_chart"] || [];
+		this.stacked_chart = opts["stacked_chart"] || [];
+		this.line_chart = opts["line_chart"] || [];
+		this.sidebar_items = opts["sidebar_items"];
 		
 		this.make_sidebar(page);
 		this.make_filters(wrapper);
 		this.bind_filters();
-		this.rpt_name = "tat-closed-tickets"				//default report
-
-		this.title_mapper = {
-			"tat-closed-tickets": "TAT For Closed Tickets",
-			"total-request-generated": "Total Request Generated",
-			"industry-document-type": "Database Count Industry & Document Type",
-			"pending-files-industry": "Industry Wise Pending Files For Approval",
-			"upload-trends": "Upload Trends",
-			"download-trends": "Download Trends",
-			"user-upload-trend": "User Wise Upload Trends",
-			"user-download-trend": "User Wise Upload Trends"
-		}
-
-		this.stacked_percent_chart = ["TAT For Closed Tickets", "Total Request Generated"];
-		this.stacked_chart = ["Database Count Industry & Document Type", "Industry Wise Pending Files For Approval"];
-		this.line_chart = ["Upload Trends", "Download Trends", "User Wise Upload Trends", "User Wise Upload Trends"]
 
 		this.report = $('<div class="graphical-report"></div>').appendTo(this.page.main);
 
@@ -44,7 +26,7 @@ report.graphicalReports = Class.extend({
 	},
 	make_sidebar: function(page){
 		var me = this;
-		page.sidebar.html(frappe.render_template("report_sidebar", { data: this.get_list_of_reports()}));
+		page.sidebar.html(frappe.render_template("report_sidebar", { data: this.sidebar_items}));
 		page.sidebar.on("click", ".module-sidebar-item", function(e){
 			$(".module-sidebar-item").removeClass("active");
 			$(this).addClass("active");
@@ -56,52 +38,6 @@ report.graphicalReports = Class.extend({
 			$(".page-title > h1 > .title-text").html(title)
 			me.refresh();
 		})
-	},
-	get_list_of_reports: function(){
-		return {
-			data: [
-				{
-					"icon": "icon-star",
-					"id": "tat-closed-tickets",
-					"label": "TAT For Closed Tickets"
-				},
-				{
-					"icon": "icon-star",
-					"id": "total-request-generated",
-					"label": "Total Request Generated"
-				},
-				{
-					"icon": "icon-star",
-					"id": "industry-document-type",
-					"label": "Database Count Industry & Document Type"
-				},
-				{
-					"icon": "icon-star",
-					"id": "pending-files-industry",
-					"label": "Industry Wise Pending Files For Approval"
-				},
-				{
-					"icon": "icon-star",
-					"id": "upload-trends",
-					"label": "Upload Trends"
-				},
-				{
-					"icon": "icon-star",
-					"id": "download-trends",
-					"label": "Download Trends"
-				},
-				{
-					"icon": "icon-star",
-					"id": "user-upload-trend",
-					"label": "User Wise Upload Trends"
-				},
-				{
-					"icon": "icon-star",
-					"id": "user-download-trend",
-					"label": "User Wise Upload Trends"
-				}
-			]
-		}
 	},
 	make_filters: function(wrapper){
 		var me = this;
@@ -149,7 +85,7 @@ report.graphicalReports = Class.extend({
 			return
 
 		return frappe.call({
-			method: "help_desk.help_desk.page.graphical_reports.graphical_reports.get",
+			method: "help_desk.reports.get",
 			type: "GET",
 			args: {
 				start: this.page.fields_dict.start.get_parsed_value(),
