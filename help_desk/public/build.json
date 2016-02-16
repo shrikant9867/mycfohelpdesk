@@ -1,6 +1,7 @@
 {
 	"js/help_desk.min.js": [
 		"public/js/loader.js",
-		"public/js/graphical_table.html"
+		"public/js/graphical_table.html",
+		"public/js/report_sidebar.html"
 	]
 }
