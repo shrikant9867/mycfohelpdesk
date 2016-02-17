@@ -9,6 +9,7 @@ report.graphicalReports = Class.extend({
 		this.stacked_percent_chart = opts["stacked_percent_chart"] || [];
 		this.stacked_chart = opts["stacked_chart"] || [];
 		this.line_chart = opts["line_chart"] || [];
+		this.combo_chart = opts["combo_chart"] || [];
 		this.sidebar_items = opts["sidebar_items"];
 		
 		this.make_sidebar(page);
@@ -139,6 +140,14 @@ report.graphicalReports = Class.extend({
 
 		if(in_list(me.line_chart, me.title_mapper[me.rpt_name])){
 			var chart = new google.visualization.LineChart(me.report.find("#report")[0]);
+			var option = this.get_chart_options()
+			chart.draw(data, option);
+			$("<br>").appendTo(me.report.find("#report"))
+		}
+		else if(in_list(this.combo_chart, me.title_mapper[me.rpt_name])){
+			console.log(me.requests)
+			var chart = new google.visualization.ComboChart(me.report.find("#report")[0]);
+			var option = this.get_chart_options()
 			chart.draw(data, option);
 			$("<br>").appendTo(me.report.find("#report"))
 		}
@@ -172,6 +181,18 @@ report.graphicalReports = Class.extend({
 						ticks: [0, .2, .4, .6, .8, 1]
 					}
 				};
+		}
+		else if(in_list(this.combo_chart, me.title_mapper[me.rpt_name])){
+			return {
+				seriesType: 'bars',
+				series: {
+					0:{targetAxisIndex:0},
+       				1:{targetAxisIndex:0},
+       				2:{
+       					type:'line',
+       					targetAxisIndex:1}
+       			}
+			};
 		}
 		else if(in_list(this.line_chart, me.title_mapper[me.rpt_name])){
 			return {
