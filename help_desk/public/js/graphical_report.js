@@ -98,23 +98,21 @@ report.graphicalReports = Class.extend({
 				if(r.message && r.message.requests && r.message.requests.length > 0){
 					$(".graphical-report").empty()
 					$('<div id="report"></div><div id="table"></div><div id="details"></div>').appendTo(".graphical-report");
+
 					me.requests = r.message.requests;
 					me.draw_chart();
+					me.details = r.message.details;
+					me.doctype = r.message.doctype
+
 					if(r.message.table){
 						if(r.message.disp_tab_details){
 							me.report.find("#table").html(frappe.render_template("graphical_table", { "table": r.message.table, "header_links": true, "col_links": false}));
+
+
 							$.each(r.message.table[0], function(idx, id){
 								if(idx != 0){
 									me.report.on("click", ".tab-link#"+id, function(e){
-										details = r.message.details[id];
-										if(details)
-											me.report.find("#details").html(frappe.render_template("graphical_table", 
-												{ 
-													"table": details,
-													"header_links": false,
-													"col_links":true,
-													"route_doc": r.message.doctype
-												}));
+										me.render_details_table($(this).attr("id"));
 									});
 								}
 							});
@@ -222,6 +220,18 @@ report.graphicalReports = Class.extend({
 				curveType: 'function',
 				legend: { position: 'bottom' }
 			};
+		}
+	},
+	render_details_table: function(id){
+		var me = this;
+		if(me.details[id]){
+			me.report.find("#details").html(frappe.render_template("graphical_table", 
+				{ 
+					"table": me.details[id],
+					"header_links": false,
+					"col_links":true,
+					"route_doc": me.doctype
+				}));
 		}
 	}
 });
