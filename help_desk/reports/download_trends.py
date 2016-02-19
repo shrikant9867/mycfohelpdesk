@@ -1,7 +1,7 @@
 import frappe
 
 def get_download_trends(start, end, user_wise=False):
-	fields = ["DATE_FORMAT(creation,'%d-%m-%y') as date"] if not user_wise else ["user_id as user"]
+	fields = ["DATE_FORMAT(creation,'%d-%m-%y') as date"] if not user_wise else ["full_name as user"]
 	fields.append("count(name) as count")
 
 	filters = [
