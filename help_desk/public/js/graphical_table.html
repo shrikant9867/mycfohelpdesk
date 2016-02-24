@@ -1,10 +1,15 @@
 <div class="table-responsive" style="margin: 0px 50px 0px 50px;">
-	<table class="table table-bordered">
+	<table class="table table-bordered table-condensed">
 		<thead>
 			<tr>
 				<th></th>
 				{% for(var i=1, l=table[0].length; i < l; i++) { %} 
-					<td align="center"><b>{{ table[0][i] }}</b></td>
+					{% if( header_links ) %} 
+						<td align="center">
+							<a class="tab-link" id="{{ table[0][i] }}"><b>{{ table[0][i] }}</b></a>
+						</td>
+					{% else %}
+						<td align="center"><b>{{ table[0][i] }}</b></td>
 				{% } %} 
 			</tr>
 		</thead>
@@ -12,9 +17,14 @@
 			{% for(var i=1, l=table.length - 1; i < l; i++) { %} 
 				<tr>
 				{% for(var j=0, m=table[i].length; j < m; j++) { %}
-					{% if( j==0 ) %} 
-						<td align="right">{{ table[i][j] }}</td>
-					{% else %} 
+					{% if( j==0 ){ %}
+						{% if( col_links ) %}
+							<td align="right">
+								<a href="desk#Form/{{ route_doc }}/{{ table[i][j] }}">{{ table[i][j] }}</a>
+							</td>
+						{% else %}
+							<td align="right">{{ table[i][j] }}</td>
+					{%} else %} 
 						<td align="center">{{ table[i][j] }}</td>
 				{% } %} 
 				</tr>
