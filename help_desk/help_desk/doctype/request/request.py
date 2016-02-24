@@ -596,7 +596,12 @@ def get_permission_query_conditions(user):
 
 @frappe.whitelist()
 def filter_employee(doctype, txt, searchfield, start, page_len, filters):
-	emp_name = frappe.db.sql("""select name,employee_name from `tabEmployee` where user_id != %s""",frappe.session.user,as_list=1)
+	emp_name = frappe.db.sql("""select name,employee_name from `tabEmployee` 
+								where user_id != '{0}'
+								and (name like '{txt}'
+											or employee_name like '{txt}' )
+									limit 20
+								""".format(frappe.session.user,txt= "%%%s%%" % txt),as_list=1)
 	return emp_name	
 
 @frappe.whitelist()
@@ -614,5 +619,10 @@ def filter_ad_approver(doctype, txt, searchfield, start, page_len, filters):
 	list1 = [filters['doc']['requester_email_id'],emp_user]
 	chain = itertools.chain(executor,list1)
 	list2 = tuple([x.encode('UTF8') for x in list(chain) if x])
- 	ad_approver	= frappe.db.sql("""select email,first_name,last_name from `tabUser` where email not in {0}""".format(list2),as_list=1)
+ 	ad_approver	= frappe.db.sql("""select email,first_name,last_name from `tabUser` usr 
+ 									where email not in {0}
+ 									and (usr.email like '{txt}'
+											or usr.first_name like '{txt}' )
+									limit 20
+ 									""".format(list2,txt= "%%%s%%" % txt),as_list=1)
  	return ad_approver
