@@ -58,7 +58,7 @@ def get_data():
 					"icon": "icon-sitemap",
 					"label": _("Graphical Reports"),
 					"description": _("Graphical Report for Request and IP Library"),
-				}
+				},
 			]
 		}
 	]

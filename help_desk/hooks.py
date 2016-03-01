@@ -78,21 +78,9 @@ permission_query_conditions = {
 # ---------------
 
 # scheduler_events = {
-# 	"all": [
-# 		"help_desk.tasks.all"
-# 	],
 # 	"daily": [
 # 		"help_desk.tasks.daily"
 # 	],
-# 	"hourly": [
-# 		"help_desk.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"help_desk.tasks.weekly"
-# 	]
-# 	"monthly": [
-# 		"help_desk.tasks.monthly"
-# 	]
 # }
 
 # Testing
