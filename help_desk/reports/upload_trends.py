@@ -23,3 +23,12 @@ def get_upload_trends(start, end, user_wise=False):
 
 def get_user_wise_upload_trends(start, end):
 	return get_upload_trends(start, end, user_wise=True)
+
+
+
+def get_ip_file_distribution_data(start, end):
+	result = frappe.db.sql(""" select skill_matrix_18, count(name) 
+									from `tabIP File` group by skill_matrix_18 """, as_list=1)
+	result_list = [["Skill Matrix 18", "Total Count"]]
+	result_list.extend([ list(row) for row in result ])
+	return { "requests":  result_list }	
