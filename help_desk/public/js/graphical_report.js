@@ -11,6 +11,7 @@ report.graphicalReports = Class.extend({
 		this.stacked_chart = opts["stacked_chart"] || [];
 		this.line_chart = opts["line_chart"] || [];
 		this.combo_chart = opts["combo_chart"] || [];
+		this.pie_chart = opts["pie_chart"] || [];
 		this.sidebar_items = opts["sidebar_items"];
 		
 		this.make_sidebar(page);
@@ -97,7 +98,7 @@ report.graphicalReports = Class.extend({
 			callback: function(r){
 				if(r.message && r.message.requests && r.message.requests.length > 0){
 					$(".graphical-report").empty()
-					$('<div id="report"></div><div id="table"></div><div id="details"></div>').appendTo(".graphical-report");
+					$('<div id="report" style="height: 400px;"></div><div id="table"></div><div id="details"></div>').appendTo(".graphical-report");
 
 					me.requests = r.message.requests;
 					me.draw_chart();
@@ -169,6 +170,12 @@ report.graphicalReports = Class.extend({
 			chart.draw(data, option);
 			$("<br>").appendTo(me.report.find("#report"))
 		}
+		else if(in_list(this.pie_chart, me.title_mapper[me.rpt_name])){
+			var chart = new google.visualization.PieChart(me.report.find("#report")[0]);
+			var option = this.get_chart_options()
+			chart.draw(data, option);
+			$("<br>").appendTo(me.report.find("#report"))
+		}
 		else{
 			var view = new google.visualization.DataView(data);
 			var option = this.get_chart_options()
@@ -219,6 +226,12 @@ report.graphicalReports = Class.extend({
 				title: me.title_mapper[me.rpt_name] || "",
 				curveType: 'function',
 				legend: { position: 'bottom' }
+			};
+		}
+		else if(in_list(this.pie_chart, me.title_mapper[me.rpt_name])){
+			return {
+				title: me.title_mapper[me.rpt_name] || "",
+				 is3D: true
 			};
 		}
 	},
