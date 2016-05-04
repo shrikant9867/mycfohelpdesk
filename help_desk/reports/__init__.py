@@ -7,8 +7,7 @@ from pending_for_approval import get_pending_file_for_approval
 from upload_trends import get_upload_trends, get_user_wise_upload_trends, get_ip_file_distribution_data
 from download_trends import get_download_trends, get_user_wise_download_trends
 from project_commercial import get_project_commercial_report
-from project_commercial import get_project_commercial_report
-from training_reports import get_training_distribution_data, get_discussion_forum_data
+from training_reports import get_training_distribution_data, get_discussion_forum_data, get_discussion_topics_commented_data, get_skill_mapping_data
 
 
 reports_mapper = {
@@ -23,7 +22,9 @@ reports_mapper = {
 	"project-commercial-report": get_project_commercial_report,
 	"ip-file-distribution":get_ip_file_distribution_data,
 	"training-distribution":get_training_distribution_data,
-	"discussion-topic":get_discussion_forum_data
+	"discussion-topic":get_discussion_forum_data,
+	"discussion-topic-commented":get_discussion_topics_commented_data,
+	"skill-mapping-data":get_skill_mapping_data
 }
 
 @frappe.whitelist()
