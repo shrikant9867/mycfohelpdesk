@@ -9,11 +9,14 @@ report.graphicalReports = Class.extend({
 		this.title_mapper = opts["title_mapper"];
 		this.stacked_percent_chart = opts["stacked_percent_chart"] || [];
 		this.stacked_chart = opts["stacked_chart"] || [];
+		this.stacked_bar_chart = opts["stacked_bar_chart"] || [];
 		this.line_chart = opts["line_chart"] || [];
 		this.combo_chart = opts["combo_chart"] || [];
 		this.pie_chart = opts["pie_chart"] || [];
 		this.sidebar_items = opts["sidebar_items"];
-		
+		this.report_list = ["skill-mapping-data", "discussion-topic", "discussion-topic-commented", 
+								"ip-file-distribution", "training-distribution"];
+
 		this.make_sidebar(page);
 		this.make_filters(wrapper);
 		this.bind_filters();
@@ -40,6 +43,7 @@ report.graphicalReports = Class.extend({
 
 			$(".page-title > h1 > .title-text").html(title)
 			me.refresh();
+			me.toggle_filters();
 		})
 	},
 	make_filters: function(wrapper){
@@ -53,13 +57,25 @@ report.graphicalReports = Class.extend({
 			default:dateutil.add_days(dateutil.get_today(), -30)});
 		this.end = this.page.add_field({fieldtype:"Date", label:"To Date", fieldname:"end", reqd:1,
 			default:dateutil.get_today()});
+		if (this.rpt_name == "skill-mapping-data") 
+			this.skill_matrix_120 = this.page.add_field({fieldtype:"Link", label:"Skill Matrix 120", fieldname:"skill_matrix_120", reqd:0,
+				options:"Skill Matrix 120"});
 		this.toggle_filters()
 	},
 	toggle_filters: function(val){
-		// this.start.$wrapper.readonlyDatepicker(true)
-		// console.log(this.start.$wrapper);
+		if(in_list(this.report_list, this.rpt_name)){
+			this.start_toggle("none")
+		}else{
+			this.start_toggle("block")
+		}
+		
 	},
-	bind_filters:function(){
+	start_toggle: function(value){
+		$(this.start.input_area).css("display", value) 
+		$(this.end.input_area).css("display", value)
+
+	},
+	bind_filters: function(){
 		var me = this
 		this.start.$input.change(function(){
 			me.validate_fields_and_refresh();
@@ -67,6 +83,10 @@ report.graphicalReports = Class.extend({
 		this.end.$input.change(function(){
 			me.validate_fields_and_refresh();
 		});
+		if(this.skill_matrix_120)
+			this.skill_matrix_120.$input.change(function(){
+				me.validate_fields_and_refresh();
+			});
 	},
 	validate_fields_and_refresh: function(me){
 		if(this.check_mandatory_fields()){
@@ -86,12 +106,13 @@ report.graphicalReports = Class.extend({
 		
 		if(!this.check_mandatory_fields())
 			return
-
+		var start_value = me.rpt_name == "skill-mapping-data" ? this.page.fields_dict.skill_matrix_120.input.value :this.page.fields_dict.start.get_parsed_value() 
+		console.log(start_value)
 		return frappe.call({
 			method: "help_desk.reports.get",
 			type: "GET",
 			args: {
-				start: this.page.fields_dict.start.get_parsed_value(),
+				start: start_value || "",
 				end: this.page.fields_dict.end.get_parsed_value(),
 				report: me.rpt_name,
 			},
@@ -157,6 +178,7 @@ report.graphicalReports = Class.extend({
 
 		var data = google.visualization.arrayToDataTable(me.requests);
 		var chart = new google.visualization.ColumnChart(me.report.find("#report")[0]);
+		var view = new google.visualization.DataView(data);
 
 		if(in_list(me.line_chart, me.title_mapper[me.rpt_name])){
 			var chart = new google.visualization.LineChart(me.report.find("#report")[0]);
@@ -176,8 +198,13 @@ report.graphicalReports = Class.extend({
 			chart.draw(data, option);
 			$("<br>").appendTo(me.report.find("#report"))
 		}
+		else if(in_list(this.stacked_bar_chart, me.title_mapper[me.rpt_name])){
+			var chart = new google.visualization.BarChart(me.report.find("#report")[0]);
+			var option = this.get_chart_options()
+			chart.draw(view, option);
+			$("<br>").appendTo(me.report.find("#report"))
+		}
 		else{
-			var view = new google.visualization.DataView(data);
 			var option = this.get_chart_options()
 			chart.draw(view, option);
 		}
@@ -231,7 +258,18 @@ report.graphicalReports = Class.extend({
 		else if(in_list(this.pie_chart, me.title_mapper[me.rpt_name])){
 			return {
 				title: me.title_mapper[me.rpt_name] || "",
-				 is3D: true
+				is3D: true
+			};
+		}
+		else if(in_list(this.stacked_bar_chart, me.title_mapper[me.rpt_name])){
+			return {
+					title: me.title_mapper[me.rpt_name] || "",
+			        width: 800,
+			        height: 400,
+			        chartArea:{"left": 250},
+			        legend: { position: 'top', maxLines: 15 },
+			        bar: { groupWidth: '75%' },
+			        isStacked: true
 			};
 		}
 	},
