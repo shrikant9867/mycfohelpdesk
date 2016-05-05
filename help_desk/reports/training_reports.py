@@ -45,7 +45,7 @@ def get_skill_mapping_data(skill_matrix_120, end):
 	result = frappe.db.sql(""" select  sub_skill, sum(none_field), sum(beginner), sum(imtermediatory), sum(expert)  
 								from `tabSkill Mapping Details` where parenttype = 'Skill Mapping' %s  
 								 group by sub_skill """%(cond), as_list=1)
-	result_list = [["Skill Matrix 120", "Naive", "Beginner", "Intermediatory", "Expert"]]
+	result_list = [["Skill Matrix 120", "None", "Beginner", "Intermediatory", "Expert"]]
 	result_list.extend([ list(row) for row in result ])
 	return { "requests":  result_list }
 
