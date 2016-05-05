@@ -41,7 +41,7 @@ report.graphicalReports = Class.extend({
 			subtitle = me.title_mapper[me.rpt_name]? " - " + me.title_mapper[me.rpt_name] : ""
 			title = "Graphical Reports"+ subtitle
 
-			$(".page-title > h1 > .title-text").html(title)
+			// $(".page-title > h1 > .title-text").html(title)
 			me.refresh();
 			me.toggle_filters();
 		})
