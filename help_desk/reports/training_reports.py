@@ -40,8 +40,8 @@ def get_formatted_result(category_list, result):
 	return my_list
 
 
-def get_skill_mapping_data(skill_matrix_120, end):
-	cond = get_conditions(skill_matrix_120)
+def get_skill_mapping_data(skill_matrix_18, end):
+	cond = get_conditions(skill_matrix_18)
 	result = frappe.db.sql(""" select  sub_skill, sum(none_field), sum(beginner), sum(imtermediatory), sum(expert)  
 								from `tabSkill Mapping Details` where parenttype = 'Skill Mapping' %s  
 								 group by sub_skill """%(cond), as_list=1)
@@ -49,9 +49,8 @@ def get_skill_mapping_data(skill_matrix_120, end):
 	result_list.extend([ list(row) for row in result ])
 	return { "requests":  result_list }
 
-def get_conditions(skill_matrix_120):
+def get_conditions(skill_matrix_18):
 	cond = ""
-	if skill_matrix_120:
-		skill_matrix_18 = frappe.db.get_value("Skill Matrix 120", skill_matrix_120, "skill_matrix_18")
+	if skill_matrix_18:
 		cond = " and skill = '%s' "%skill_matrix_18
 	return cond						   

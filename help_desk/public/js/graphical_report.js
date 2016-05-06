@@ -58,8 +58,8 @@ report.graphicalReports = Class.extend({
 		this.end = this.page.add_field({fieldtype:"Date", label:"To Date", fieldname:"end", reqd:1,
 			default:dateutil.get_today()});
 		if (this.rpt_name == "skill-mapping-data") 
-			this.skill_matrix_120 = this.page.add_field({fieldtype:"Link", label:"Skill Matrix 120", fieldname:"skill_matrix_120", reqd:0,
-				options:"Skill Matrix 120"});
+			this.skill_matrix_18 = this.page.add_field({fieldtype:"Link", label:"Skill Matrix 18", fieldname:"skill_matrix_18", reqd:0,
+				options:"Skill Matrix 18"});
 		this.toggle_filters()
 	},
 	toggle_filters: function(val){
@@ -83,8 +83,8 @@ report.graphicalReports = Class.extend({
 		this.end.$input.change(function(){
 			me.validate_fields_and_refresh();
 		});
-		if(this.skill_matrix_120)
-			this.skill_matrix_120.$input.change(function(){
+		if(this.skill_matrix_18)
+			this.skill_matrix_18.$input.change(function(){
 				me.validate_fields_and_refresh();
 			});
 	},
@@ -106,7 +106,7 @@ report.graphicalReports = Class.extend({
 		
 		if(!this.check_mandatory_fields())
 			return
-		var start_value = me.rpt_name == "skill-mapping-data" ? this.page.fields_dict.skill_matrix_120.input.value :this.page.fields_dict.start.get_parsed_value() 
+		var start_value = me.rpt_name == "skill-mapping-data" ? this.page.fields_dict.skill_matrix_18.input.value :this.page.fields_dict.start.get_parsed_value() 
 		console.log(start_value)
 		return frappe.call({
 			method: "help_desk.reports.get",
