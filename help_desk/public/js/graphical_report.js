@@ -128,8 +128,12 @@ report.graphicalReports = Class.extend({
 
 					if(r.message.table){
 						if(r.message.disp_tab_details){
-							me.report.find("#table").html(frappe.render_template("graphical_table", { "table": r.message.table, "header_links": true, "col_links": false}));
-
+							if(r.message.grid_name && r.message.grid_name == "IP File Distribution"){
+								me.report.find("#table").html(frappe.render_template("ip_file_graphical_table", { "table": r.message.table, "header_links": true, "col_links": false}));
+							}
+							else{
+								me.report.find("#table").html(frappe.render_template("graphical_table", { "table": r.message.table, "header_links": true, "col_links": false}));
+							}
 
 							$.each(r.message.table[0], function(idx, id){
 								if(idx != 0){
@@ -140,7 +144,14 @@ report.graphicalReports = Class.extend({
 							});
 						}
 						else
-							me.report.find("#table").html(frappe.render_template("graphical_table", { "table": r.message.table, "header_links": false, "col_links": false}));
+							if(r.message.grid_name && r.message.grid_name == "IP File Distribution"){
+								console.log("in if....")
+								me.report.find("#table").html(frappe.render_template("ip_file_graphical_table", { "table": r.message.table, "header_links": false, "col_links": false}));
+							}
+							else{
+								console.log("in else...")
+								me.report.find("#table").html(frappe.render_template("graphical_table", { "table": r.message.table, "header_links": false, "col_links": false}));
+							}	
 					}
 				}
 				else{
