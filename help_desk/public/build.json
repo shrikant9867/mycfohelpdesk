@@ -2,6 +2,7 @@
 	"js/help_desk.min.js": [
 		"public/js/loader.js",
 		"public/js/graphical_table.html",
+		"public/js/ip_file_graphical_table.html",
 		"public/js/report_sidebar.html"
 	]
 }

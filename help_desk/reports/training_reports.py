@@ -53,4 +53,4 @@ def get_conditions(skill_matrix_18):
 	cond = ""
 	if skill_matrix_18:
 		cond = " and skill = '%s' "%skill_matrix_18
-	return cond						   
+	return cond

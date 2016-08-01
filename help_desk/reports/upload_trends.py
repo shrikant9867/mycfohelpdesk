@@ -31,4 +31,9 @@ def get_ip_file_distribution_data(start, end):
 									from `tabIP File` group by skill_matrix_18 """, as_list=1)
 	result_list = [["Skill Matrix 18", "Total Count"]]
 	result_list.extend([ list(row) for row in result ])
-	return { "requests":  result_list }	
+	# return { "requests":  result_list }	
+	return {
+		"requests": result_list,
+		"table": result_list,
+		"grid_name": "IP File Distribution",
+	}
