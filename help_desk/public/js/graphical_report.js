@@ -107,7 +107,6 @@ report.graphicalReports = Class.extend({
 		if(!this.check_mandatory_fields())
 			return
 		var start_value = me.rpt_name == "skill-mapping-data" ? this.page.fields_dict.skill_matrix_18.input.value :this.page.fields_dict.start.get_parsed_value() 
-		console.log(start_value)
 		return frappe.call({
 			method: "help_desk.reports.get",
 			type: "GET",
@@ -145,11 +144,9 @@ report.graphicalReports = Class.extend({
 						}
 						else
 							if(r.message.grid_name && r.message.grid_name == "IP File Distribution"){
-								console.log("in if....")
 								me.report.find("#table").html(frappe.render_template("ip_file_graphical_table", { "table": r.message.table, "header_links": false, "col_links": false}));
 							}
 							else{
-								console.log("in else...")
 								me.report.find("#table").html(frappe.render_template("graphical_table", { "table": r.message.table, "header_links": false, "col_links": false}));
 							}	
 					}
@@ -205,6 +202,9 @@ report.graphicalReports = Class.extend({
 		}
 		else if(in_list(this.pie_chart, me.title_mapper[me.rpt_name])){
 			var chart = new google.visualization.PieChart(me.report.find("#report")[0]);
+			if (me.title_mapper[me.rpt_name] == "IP File Distribution"){
+				this.ip_file_piechart_to_global_search(chart, data)
+			}
 			var option = this.get_chart_options()
 			chart.draw(data, option);
 			$("<br>").appendTo(me.report.find("#report"))
@@ -295,5 +295,18 @@ report.graphicalReports = Class.extend({
 					"route_doc": me.doctype
 				}));
 		}
+	},
+	ip_file_piechart_to_global_search: function(chart, data){
+		function selectHandler() {
+			var selectedItem = chart.getSelection()[0];
+			if (selectedItem) {
+				var value = data.getValue(selectedItem.row, 0);
+				frappe.route_options = {
+					"value": value
+				};
+				frappe.set_route("ip-file-dashboard");
+			}
+		}
+		google.visualization.events.addListener(chart, 'select', selectHandler);
 	}
 });
